@@ -93,6 +93,64 @@
       .modal-content {
         padding: 0 1.5rem 2rem;
       }
+      /* Ornament animations */
+      .ornaments {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        margin-top: 2rem;
+        padding: 0.5rem 0;
+      }
+      .ornament {
+        display: inline-block;
+        color: #E77625;
+        opacity: 0.7;
+      }
+      /* Gentle floating */
+      @keyframes ornFloat {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-3px); }
+      }
+      /* Slow spin */
+      @keyframes ornSpin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      /* Subtle pulse */
+      @keyframes ornPulse {
+        0%, 100% { opacity: 0.5; transform: scale(1); }
+        50% { opacity: 0.85; transform: scale(1.15); }
+      }
+      /* Twinkle */
+      @keyframes ornTwinkle {
+        0%, 100% { opacity: 0.4; }
+        50% { opacity: 0.9; }
+      }
+      .ornament-float {
+        animation: ornFloat 3s ease-in-out infinite;
+      }
+      .ornament-spin {
+        animation: ornSpin 8s linear infinite;
+      }
+      .ornament-pulse {
+        animation: ornPulse 2.5s ease-in-out infinite;
+      }
+      .ornament-twinkle {
+        animation: ornTwinkle 2s ease-in-out infinite;
+      }
+      .ornament svg {
+        width: 14px;
+        height: 14px;
+        fill: currentColor;
+      }
+      .ornament-sm svg {
+        width: 10px;
+        height: 10px;
+      }
+      .ornament-lg svg {
+        width: 18px;
+        height: 18px;
+      }
       .entry {
         border-left: 3px solid #FCF7E9;
         padding-left: 1rem;
@@ -137,13 +195,16 @@
 
       <div class="text-base space-y-6">
         <p>
-          I build products that make complicated industries less painful. Energy, fintech, cybersecurity. I co-founded a startup in an industry I knew nothing about, with no network in it. I did most of a PhD in Interactive Media at Aalto. At some point I made a video game because I hated video games.
+          I help companies figure out what to build, why it matters, and how to talk about it.
         </p>
         <p>
-          I've also moved countries four times, which either means I'm very adaptable or very restless. Probably both.
+          I grew up on a farm in Turkey. I was the first in my family to go to university. I studied computer science, then got into one of Europe's most competitive design programmes at Aalto, with no design background. My graduation project was a game where the player never needed to look at a screen. The physical world was the interface. That instinct, to make technology fit around people rather than the other way around, is still what drives my work.
         </p>
         <p>
-          I have a habit of looking at my friends' businesses and telling them what's broken. An academic became a consultant. An astrologer doubled her clients by cutting her session time in half. I do this for companies too, but I charge for it.
+          I co-founded an energy risk management startup. I went from knowing nobody in the sector to sitting across from energy executives and securing pilots. I've moved countries four times. I'm either very adaptable or very restless. Probably both.
+        </p>
+        <p>
+          I have a habit of telling people what's broken in their business. An academic became a consultant. An astrologer doubled her clients by cutting her session time in half. If your product or business has something broken in it, I'll probably notice. We should talk.
         </p>
       </div>
 
@@ -152,6 +213,46 @@
         <a href="#" onclick="openModal('howto-modal'); return false;" class="nav-link">How to Work With Me</a>
         <a href="mailto:reha@rehadiscioglu.com" class="nav-link">Email</a>
         <a href="https://www.linkedin.com/in/rehadiscioglu/" target="_blank" class="nav-link">LinkedIn</a>
+      </div>
+
+      <!-- Turkish tile-inspired ornamental decorations -->
+      <div class="ornaments">
+        <!-- Tulip (lale) - iconic İznik motif -->
+        <span class="ornament ornament-float" style="animation-delay: 0s;">
+          <svg viewBox="0 0 24 24"><path d="M12 2C10 6 6 8 6 12c0 3 2.5 5 6 5s6-2 6-5c0-4-4-6-6-10z"/><line x1="12" y1="17" x2="12" y2="22" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M9 20q3-2 6 0" stroke="currentColor" stroke-width="1" fill="none"/></svg>
+        </span>
+        <!-- Small dot separator -->
+        <span class="ornament ornament-sm ornament-twinkle" style="animation-delay: 0.5s;">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/></svg>
+        </span>
+        <!-- Carnation (karanfil) - stylized İznik flower -->
+        <span class="ornament ornament-pulse" style="animation-delay: 0.3s;">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3"/><circle cx="8" cy="11" r="2.5"/><circle cx="16" cy="11" r="2.5"/><circle cx="9" cy="14" r="2"/><circle cx="15" cy="14" r="2"/><line x1="12" y1="16" x2="12" y2="22" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+        </span>
+        <!-- Small dot separator -->
+        <span class="ornament ornament-sm ornament-twinkle" style="animation-delay: 1s;">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/></svg>
+        </span>
+        <!-- Geometric rosette (gül) - 8-fold symmetry tile pattern -->
+        <span class="ornament ornament-lg ornament-spin" style="animation-delay: 0.2s;">
+          <svg viewBox="0 0 24 24"><path d="M12 2l2 4 4-2-2 4 4 2-4 2 2 4-4-2-2 4-2-4-4 2 2-4-4-2 4-2-2-4 4 2z"/></svg>
+        </span>
+        <!-- Small dot separator -->
+        <span class="ornament ornament-sm ornament-twinkle" style="animation-delay: 0.7s;">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/></svg>
+        </span>
+        <!-- Hyacinth (sümbül) - elongated İznik floral -->
+        <span class="ornament ornament-float" style="animation-delay: 0.6s;">
+          <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="2.5" ry="3"/><ellipse cx="12" cy="10" rx="3" ry="2.5"/><ellipse cx="12" cy="14.5" rx="2" ry="2"/><line x1="12" y1="16.5" x2="12" y2="22" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+        </span>
+        <!-- Small dot separator -->
+        <span class="ornament ornament-sm ornament-twinkle" style="animation-delay: 1.3s;">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/></svg>
+        </span>
+        <!-- Rumi spiral - Seljuk/Ottoman interlocking motif -->
+        <span class="ornament ornament-pulse" style="animation-delay: 0.9s;">
+          <svg viewBox="0 0 24 24"><path d="M12 4c4 0 7 3 7 7s-3 7-7 7" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M12 8c2 0 3 1.5 3 3s-1 3-3 3" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="12" cy="11" r="1.5"/></svg>
+        </span>
       </div>
     </div>
 
