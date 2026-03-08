@@ -93,6 +93,64 @@
       .modal-content {
         padding: 0 1.5rem 2rem;
       }
+      /* Ornament animations */
+      .ornaments {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        margin-top: 2rem;
+        padding: 0.5rem 0;
+      }
+      .ornament {
+        display: inline-block;
+        color: #E77625;
+        opacity: 0.7;
+      }
+      /* Gentle floating */
+      @keyframes ornFloat {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-3px); }
+      }
+      /* Slow spin */
+      @keyframes ornSpin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      /* Subtle pulse */
+      @keyframes ornPulse {
+        0%, 100% { opacity: 0.5; transform: scale(1); }
+        50% { opacity: 0.85; transform: scale(1.15); }
+      }
+      /* Twinkle */
+      @keyframes ornTwinkle {
+        0%, 100% { opacity: 0.4; }
+        50% { opacity: 0.9; }
+      }
+      .ornament-float {
+        animation: ornFloat 3s ease-in-out infinite;
+      }
+      .ornament-spin {
+        animation: ornSpin 8s linear infinite;
+      }
+      .ornament-pulse {
+        animation: ornPulse 2.5s ease-in-out infinite;
+      }
+      .ornament-twinkle {
+        animation: ornTwinkle 2s ease-in-out infinite;
+      }
+      .ornament svg {
+        width: 14px;
+        height: 14px;
+        fill: currentColor;
+      }
+      .ornament-sm svg {
+        width: 10px;
+        height: 10px;
+      }
+      .ornament-lg svg {
+        width: 18px;
+        height: 18px;
+      }
       .entry {
         border-left: 3px solid #FCF7E9;
         padding-left: 1rem;
@@ -152,6 +210,46 @@
         <a href="#" onclick="openModal('howto-modal'); return false;" class="nav-link">How to Work With Me</a>
         <a href="mailto:reha@rehadiscioglu.com" class="nav-link">Email</a>
         <a href="https://www.linkedin.com/in/rehadiscioglu/" target="_blank" class="nav-link">LinkedIn</a>
+      </div>
+
+      <!-- Ornamental decorations -->
+      <div class="ornaments">
+        <!-- Diamond -->
+        <span class="ornament ornament-sm ornament-float" style="animation-delay: 0s;">
+          <svg viewBox="0 0 24 24"><path d="M12 2L2 12l10 10 10-10L12 2z"/></svg>
+        </span>
+        <!-- Four-point star -->
+        <span class="ornament ornament-pulse" style="animation-delay: 0.4s;">
+          <svg viewBox="0 0 24 24"><path d="M12 0l3 9h9l-7.5 5.5L19.5 24 12 18l-7.5 6 3-9.5L0 9h9z"/></svg>
+        </span>
+        <!-- Small circle -->
+        <span class="ornament ornament-sm ornament-twinkle" style="animation-delay: 0.8s;">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/></svg>
+        </span>
+        <!-- Asterisk / snowflake -->
+        <span class="ornament ornament-spin" style="animation-delay: 0.2s;">
+          <svg viewBox="0 0 24 24"><path d="M12 0v24M0 12h24M3.5 3.5l17 17M20.5 3.5l-17 17" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+        </span>
+        <!-- Small diamond -->
+        <span class="ornament ornament-sm ornament-float" style="animation-delay: 1.2s;">
+          <svg viewBox="0 0 24 24"><path d="M12 2L2 12l10 10 10-10L12 2z"/></svg>
+        </span>
+        <!-- Trefoil / clover -->
+        <span class="ornament ornament-pulse" style="animation-delay: 0.6s;">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><circle cx="7" cy="15" r="4"/><circle cx="17" cy="15" r="4"/></svg>
+        </span>
+        <!-- Tiny dot -->
+        <span class="ornament ornament-sm ornament-twinkle" style="animation-delay: 1.5s;">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/></svg>
+        </span>
+        <!-- Cross ornament -->
+        <span class="ornament ornament-float" style="animation-delay: 0.3s;">
+          <svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+        </span>
+        <!-- Small circle -->
+        <span class="ornament ornament-sm ornament-twinkle" style="animation-delay: 1s;">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/></svg>
+        </span>
       </div>
     </div>
 
