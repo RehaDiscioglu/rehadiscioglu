@@ -451,7 +451,7 @@
       </div>
 
       <!-- Turkish tile-inspired ornamental decorations -->
-      <div class="ornaments">
+      <div class="ornaments" id="ornaments">
         <!-- Tulip (lale) - iconic İznik motif -->
         <span class="ornament ornament-float" style="animation-delay: 0s;">
           <svg viewBox="0 0 24 24"><path d="M12 2C10 6 6 8 6 12c0 3 2.5 5 6 5s6-2 6-5c0-4-4-6-6-10z"/><line x1="12" y1="17" x2="12" y2="22" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M9 20q3-2 6 0" stroke="currentColor" stroke-width="1" fill="none"/></svg>
@@ -981,6 +981,9 @@
           // Remove horizon glow on deactivate
           const horizonEl = document.getElementById('sunset-horizon-glow')
           if (horizonEl) horizonEl.remove()
+          // Show ornaments again
+          const ornEl = document.getElementById('ornaments')
+          if (ornEl) ornEl.style.display = ''
         } else {
           // Disable bloom mode first (mutually exclusive)
           if (window._bloomActive) {
@@ -988,6 +991,9 @@
           }
           startSunset()
           if (btn) btn.classList.add('active')
+          // Hide ornaments during sunset mode
+          const ornEl = document.getElementById('ornaments')
+          if (ornEl) ornEl.style.display = 'none'
         }
       }
 
@@ -1447,6 +1453,9 @@
         if (bloomActive) {
           stopBloom();
           if (btn) btn.classList.remove('active');
+          // Show ornaments again
+          var ornEl = document.getElementById('ornaments');
+          if (ornEl) ornEl.style.display = '';
         } else {
           // Disable sunset mode first (mutually exclusive)
           if (window._sunsetActive) {
@@ -1454,6 +1463,9 @@
           }
           startBloom();
           if (btn) btn.classList.add('active');
+          // Hide ornaments during bloom mode
+          var ornEl = document.getElementById('ornaments');
+          if (ornEl) ornEl.style.display = 'none';
         }
       };
 
