@@ -311,7 +311,7 @@
         position: fixed;
         inset: 0;
         pointer-events: none;
-        z-index: 9999;
+        z-index: 40;
         overflow: hidden;
       }
       .bloom-flower {
@@ -1145,14 +1145,22 @@
         const duration = randomBetween(3, 6); // seconds
         const rotation = randomBetween(-30, 30);
 
+        // Outer wrapper handles rotation, inner handles bloom animation
+        const wrapper = document.createElement('div');
+        wrapper.style.position = 'absolute';
+        wrapper.style.left = x + '%';
+        wrapper.style.top = y + '%';
+        wrapper.style.transform = `rotate(${rotation}deg)`;
+        wrapper.style.pointerEvents = 'none';
+
         const el = document.createElement('div');
         el.className = 'bloom-flower';
         el.innerHTML = flowerFn(size);
-        el.style.left = x + '%';
-        el.style.top = y + '%';
         el.style.setProperty('--bloom-duration', duration + 's');
-        el.style.transform = `rotate(${rotation}deg)`;
-        container.appendChild(el);
+        el.style.position = 'relative';
+
+        wrapper.appendChild(el);
+        container.appendChild(wrapper);
 
         // Trigger bloom animation
         requestAnimationFrame(function() {
@@ -1161,7 +1169,7 @@
 
         // Remove after animation completes
         const removeTimer = setTimeout(function() {
-          if (el.parentNode) el.parentNode.removeChild(el);
+          if (wrapper.parentNode) wrapper.parentNode.removeChild(wrapper);
           var idx = bloomTimers.indexOf(removeTimer);
           if (idx > -1) bloomTimers.splice(idx, 1);
         }, duration * 1000 + 100);
