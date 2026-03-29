@@ -390,6 +390,18 @@
     <div id="sunset-sun-global"></div>
 
     <div class="max-w-3xl mx-auto py-16 px-4" style="position: relative; z-index: 1;">
+      <!-- Mode toggle buttons (upper right) -->
+      <div style="position: absolute; top: 1rem; right: 0; display: flex; gap: 1rem; align-items: center; z-index: 10;">
+        <button id="bloom-toggle-btn" class="bloom-toggle" onclick="toggleBloomMode()">
+          <span class="bloom-toggle-label">Bloom Mode</span>
+          <span class="bloom-toggle-track"><span class="bloom-toggle-thumb"></span></span>
+        </button>
+        <button id="sunset-toggle-btn" class="sunset-toggle" onclick="toggleSunsetMode()">
+          <span class="sunset-toggle-label">Sunset Mode</span>
+          <span class="sunset-toggle-track"><span class="sunset-toggle-thumb"></span></span>
+        </button>
+      </div>
+
       <div class="flex items-center mb-8">
         <img src="Reha_1_b_BW.jpg" alt="Portrait of Reha Discioglu, Product, AI & Design Strategist" class="w-32 h-32 object-cover rounded-full mr-6" />
       </div>
@@ -425,14 +437,6 @@
         <a href="blog/index.html" class="nav-link">Blog</a>
         <a href="mailto:reha@rehadiscioglu.com" class="nav-link">Email</a>
         <a href="https://www.linkedin.com/in/rehadiscioglu/" target="_blank" class="nav-link">LinkedIn</a>
-        <button id="sunset-toggle-btn" class="sunset-toggle" onclick="toggleSunsetMode()">
-          <span class="sunset-toggle-label">Sunset Mode</span>
-          <span class="sunset-toggle-track"><span class="sunset-toggle-thumb"></span></span>
-        </button>
-        <button id="bloom-toggle-btn" class="bloom-toggle" onclick="toggleBloomMode()">
-          <span class="bloom-toggle-label">Bloom Mode</span>
-          <span class="bloom-toggle-track"><span class="bloom-toggle-thumb"></span></span>
-        </button>
       </div>
 
       <!-- Latest blog post preview -->
