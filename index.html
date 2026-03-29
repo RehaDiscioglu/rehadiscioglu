@@ -260,6 +260,106 @@
         width: 18px;
         height: 18px;
       }
+      /* Bloom mode toggle switch */
+      .bloom-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: none;
+        border: none;
+        font-family: 'Source Sans Pro', sans-serif;
+        font-size: 0.875rem;
+        color: #D4648A;
+        cursor: pointer;
+        vertical-align: middle;
+        padding: 0;
+      }
+      .bloom-toggle-label {
+        transition: opacity 0.2s ease;
+      }
+      .bloom-toggle:hover .bloom-toggle-label {
+        opacity: 0.7;
+      }
+      .bloom-toggle-track {
+        position: relative;
+        width: 36px;
+        height: 20px;
+        background: #ccc;
+        border-radius: 10px;
+        transition: background 0.3s ease;
+        flex-shrink: 0;
+      }
+      .bloom-toggle.active .bloom-toggle-track {
+        background: #D4648A;
+      }
+      .bloom-toggle-thumb {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 16px;
+        height: 16px;
+        background: #fff;
+        border-radius: 50%;
+        transition: transform 0.3s ease;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      }
+      .bloom-toggle.active .bloom-toggle-thumb {
+        transform: translateX(16px);
+      }
+      /* Bloom flower container */
+      #bloom-container {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 9999;
+        overflow: hidden;
+      }
+      .bloom-flower {
+        position: absolute;
+        pointer-events: none;
+        opacity: 0;
+        transform: scale(0) rotate(0deg);
+      }
+      /* Bloom animation */
+      @keyframes bloomIn {
+        0% {
+          opacity: 0;
+          transform: scale(0) rotate(-30deg);
+        }
+        15% {
+          opacity: 0.7;
+          transform: scale(0.4) rotate(-10deg);
+        }
+        40% {
+          opacity: 1;
+          transform: scale(1.05) rotate(5deg);
+        }
+        60% {
+          opacity: 1;
+          transform: scale(0.98) rotate(-2deg);
+        }
+        75% {
+          opacity: 1;
+          transform: scale(1) rotate(0deg);
+        }
+        90% {
+          opacity: 0.6;
+          transform: scale(0.95) rotate(3deg);
+        }
+        100% {
+          opacity: 0;
+          transform: scale(0.5) rotate(10deg);
+        }
+      }
+      .bloom-flower.blooming {
+        animation: bloomIn var(--bloom-duration, 4s) cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      }
+      /* Gentle petal sway for individual petals */
+      @keyframes petalSway {
+        0%, 100% { transform: rotate(0deg); }
+        25% { transform: rotate(3deg); }
+        75% { transform: rotate(-3deg); }
+      }
       .entry {
         border-left: 3px solid #FCF7E9;
         padding-left: 1rem;
@@ -336,7 +436,14 @@
           <span class="sunset-toggle-label">Sunset Mode</span>
           <span class="sunset-toggle-track"><span class="sunset-toggle-thumb"></span></span>
         </button>
+        <button id="bloom-toggle-btn" class="bloom-toggle" onclick="toggleBloomMode()">
+          <span class="bloom-toggle-label">Bloom Mode</span>
+          <span class="bloom-toggle-track"><span class="bloom-toggle-thumb"></span></span>
+        </button>
       </div>
+
+      <!-- Bloom flower container -->
+      <div id="bloom-container"></div>
 
       <!-- Latest blog post preview -->
       <div class="mt-10 mb-2">
@@ -887,6 +994,241 @@
     </script>
 
     <script>
+      /* ==================== BLOOM MODE ==================== */
+      let bloomActive = false;
+      let bloomTimers = [];
+      let bloomScheduleTimer = null;
+
+      // Flower SVG definitions - each returns an SVG string
+      // All flowers are hand-crafted with beautiful petal shapes
+      const FLOWER_TYPES = [
+        // Sakura (cherry blossom) - 5 petals with notched tips
+        function sakura(size, color) {
+          const c = color || randomPick(['#FFB7C5', '#FFC0CB', '#FF9CAD', '#FFD1DC', '#F4A7BB']);
+          const center = randomPick(['#FFE066', '#FFD700', '#FFEC80']);
+          return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <g transform="translate(50,50)">
+              ${[0,72,144,216,288].map(a => `<g transform="rotate(${a})">
+                <path d="M0,-8 C-10,-25 -18,-40 -6,-42 C-2,-43 2,-43 6,-42 C18,-40 10,-25 0,-8Z" fill="${c}" opacity="0.9"/>
+              </g>`).join('')}
+              <circle cx="0" cy="0" r="6" fill="${center}"/>
+              ${[0,60,120,180,240,300].map(a => `<circle cx="${3*Math.cos(a*Math.PI/180)}" cy="${3*Math.sin(a*Math.PI/180)}" r="1.2" fill="${randomPick(['#FF6B8A','#E85D75'])}"/>`).join('')}
+            </g>
+          </svg>`;
+        },
+        // Camellia - layered round petals, lush
+        function camellia(size, color) {
+          const c = color || randomPick(['#E8435A', '#D4364D', '#FF6B81', '#C94C66', '#E2556B']);
+          const center = randomPick(['#FFE066', '#FFD700']);
+          return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <g transform="translate(50,50)">
+              ${[0,45,90,135,180,225,270,315].map(a => `<g transform="rotate(${a})">
+                <ellipse cx="0" cy="-18" rx="12" ry="18" fill="${c}" opacity="0.85"/>
+              </g>`).join('')}
+              ${[22,67,112,157,202,247,292,337].map(a => `<g transform="rotate(${a})">
+                <ellipse cx="0" cy="-12" rx="9" ry="13" fill="${c}" opacity="0.7"/>
+              </g>`).join('')}
+              <circle cx="0" cy="0" r="8" fill="${center}"/>
+              ${[0,30,60,90,120,150,180,210,240,270,300,330].map(a => `<circle cx="${5*Math.cos(a*Math.PI/180)}" cy="${5*Math.sin(a*Math.PI/180)}" r="0.8" fill="#D4A017" opacity="0.8"/>`).join('')}
+            </g>
+          </svg>`;
+        },
+        // Peony - many ruffled layered petals
+        function peony(size, color) {
+          const c = color || randomPick(['#F8A4C8', '#E88AAE', '#FFB6D3', '#F09AC0', '#FFC4D6']);
+          const darker = randomPick(['#D4648A', '#C9577D']);
+          const center = randomPick(['#FFE680', '#FFDA44']);
+          return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <g transform="translate(50,50)">
+              ${[0,60,120,180,240,300].map(a => `<g transform="rotate(${a})">
+                <path d="M0,-6 C-14,-22 -22,-38 -8,-40 C0,-41 8,-40 8,-40 C22,-38 14,-22 0,-6Z" fill="${c}" opacity="0.75"/>
+              </g>`).join('')}
+              ${[30,90,150,210,270,330].map(a => `<g transform="rotate(${a})">
+                <path d="M0,-5 C-10,-18 -16,-30 -5,-31 C0,-32 5,-31 5,-31 C16,-30 10,-18 0,-5Z" fill="${darker}" opacity="0.65"/>
+              </g>`).join('')}
+              ${[15,75,135,195,255,315].map(a => `<g transform="rotate(${a})">
+                <ellipse cx="0" cy="-10" rx="6" ry="10" fill="${c}" opacity="0.55"/>
+              </g>`).join('')}
+              <circle cx="0" cy="0" r="7" fill="${center}"/>
+            </g>
+          </svg>`;
+        },
+        // Chrysanthemum - many thin layered petals radiating out
+        function chrysanthemum(size, color) {
+          const c = color || randomPick(['#FFD700', '#FFA500', '#FF8C42', '#FFB347', '#FFCC33']);
+          const inner = randomPick(['#FF6B00', '#E65C00']);
+          const center = randomPick(['#8B4513', '#6B3410']);
+          const petalCount = 18;
+          return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <g transform="translate(50,50)">
+              ${Array.from({length: petalCount}, (_, i) => {
+                const a = (360 / petalCount) * i;
+                return `<g transform="rotate(${a})"><ellipse cx="0" cy="-22" rx="4.5" ry="18" fill="${c}" opacity="0.8"/></g>`;
+              }).join('')}
+              ${Array.from({length: petalCount}, (_, i) => {
+                const a = (360 / petalCount) * i + 10;
+                return `<g transform="rotate(${a})"><ellipse cx="0" cy="-14" rx="3.5" ry="12" fill="${inner}" opacity="0.7"/></g>`;
+              }).join('')}
+              <circle cx="0" cy="0" r="6" fill="${center}"/>
+            </g>
+          </svg>`;
+        },
+        // Daisy - simple white petals with yellow center
+        function daisy(size, color) {
+          const c = color || randomPick(['#FFFFFF', '#FFF8DC', '#FFFACD', '#F0FFF0']);
+          const center = randomPick(['#FFD700', '#FFC107', '#FFB300']);
+          return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <g transform="translate(50,50)">
+              ${Array.from({length: 12}, (_, i) => {
+                const a = 30 * i;
+                return `<g transform="rotate(${a})"><ellipse cx="0" cy="-20" rx="6" ry="16" fill="${c}" opacity="0.9" stroke="#E8E0D0" stroke-width="0.3"/></g>`;
+              }).join('')}
+              <circle cx="0" cy="0" r="9" fill="${center}"/>
+              ${Array.from({length: 8}, (_, i) => {
+                const a = 45 * i;
+                const r = 4 + Math.random() * 3;
+                return `<circle cx="${r*Math.cos(a*Math.PI/180)}" cy="${r*Math.sin(a*Math.PI/180)}" r="1" fill="#E8A800" opacity="0.6"/>`;
+              }).join('')}
+            </g>
+          </svg>`;
+        },
+        // Rose - spiral-layered petals
+        function rose(size, color) {
+          const c = color || randomPick(['#E53E6B', '#C62E50', '#FF4D7A', '#D63964', '#B82550']);
+          const lighter = randomPick(['#FF8FAB', '#FF6B8A']);
+          const center = randomPick(['#8B0000', '#A0153E']);
+          return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <g transform="translate(50,50)">
+              ${[0,72,144,216,288].map(a => `<g transform="rotate(${a})">
+                <path d="M0,-5 C-12,-20 -20,-36 -6,-38 C0,-39 6,-38 6,-38 C20,-36 12,-20 0,-5Z" fill="${c}" opacity="0.8"/>
+              </g>`).join('')}
+              ${[36,108,180,252,324].map(a => `<g transform="rotate(${a})">
+                <path d="M0,-4 C-8,-14 -14,-26 -4,-27 C0,-28 4,-27 4,-27 C14,-26 8,-14 0,-4Z" fill="${lighter}" opacity="0.7"/>
+              </g>`).join('')}
+              <circle cx="0" cy="0" r="5" fill="${center}"/>
+              <path d="M-2,-3 C-1,-5 1,-5 2,-3 C3,-1 1,1 0,1 C-1,1 -3,-1 -2,-3Z" fill="${lighter}" opacity="0.5"/>
+            </g>
+          </svg>`;
+        },
+        // Lotus - elegant petals
+        function lotus(size, color) {
+          const c = color || randomPick(['#FFB6C1', '#FFA0B4', '#FF8DA1', '#FFDDE4']);
+          const tips = randomPick(['#FF69B4', '#FF1493']);
+          const center = randomPick(['#FFE066', '#FFDA44']);
+          return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <g transform="translate(50,50)">
+              ${[-60,-30,0,30,60].map(a => `<g transform="rotate(${a})">
+                <path d="M0,-5 C-8,-18 -12,-38 0,-42 C12,-38 8,-18 0,-5Z" fill="${c}" opacity="0.85" stroke="${tips}" stroke-width="0.5"/>
+              </g>`).join('')}
+              ${[-45,-15,15,45].map(a => `<g transform="rotate(${a})">
+                <path d="M0,-4 C-6,-12 -8,-28 0,-31 C8,-28 6,-12 0,-4Z" fill="${c}" opacity="0.6"/>
+              </g>`).join('')}
+              <circle cx="0" cy="0" r="5" fill="${center}"/>
+              ${[0,60,120,180,240,300].map(a => `<circle cx="${3*Math.cos(a*Math.PI/180)}" cy="${3*Math.sin(a*Math.PI/180)}" r="0.8" fill="#D4A017"/>`).join('')}
+            </g>
+          </svg>`;
+        }
+      ];
+
+      function randomPick(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+      }
+
+      function randomBetween(min, max) {
+        return min + Math.random() * (max - min);
+      }
+
+      function spawnFlower() {
+        if (!bloomActive) return;
+
+        const container = document.getElementById('bloom-container');
+        if (!container) return;
+
+        const flowerFn = randomPick(FLOWER_TYPES);
+        const size = Math.round(randomBetween(30, 75));
+        const x = randomBetween(5, 90); // percentage
+        const y = randomBetween(5, 90); // percentage
+        const duration = randomBetween(3, 6); // seconds
+        const rotation = randomBetween(-30, 30);
+
+        const el = document.createElement('div');
+        el.className = 'bloom-flower';
+        el.innerHTML = flowerFn(size);
+        el.style.left = x + '%';
+        el.style.top = y + '%';
+        el.style.setProperty('--bloom-duration', duration + 's');
+        el.style.transform = `rotate(${rotation}deg)`;
+        container.appendChild(el);
+
+        // Trigger bloom animation
+        requestAnimationFrame(function() {
+          el.classList.add('blooming');
+        });
+
+        // Remove after animation completes
+        const removeTimer = setTimeout(function() {
+          if (el.parentNode) el.parentNode.removeChild(el);
+        }, duration * 1000 + 100);
+        bloomTimers.push(removeTimer);
+      }
+
+      function scheduleNextBloom() {
+        if (!bloomActive) return;
+
+        // Truly random: sometimes spawn 1, sometimes 2-3 at once
+        const batchSize = Math.random() < 0.3 ? Math.floor(randomBetween(2, 4)) : 1;
+        for (let i = 0; i < batchSize; i++) {
+          const stagger = i * randomBetween(100, 400);
+          const t = setTimeout(function() { spawnFlower(); }, stagger);
+          bloomTimers.push(t);
+        }
+
+        // Random delay before next bloom event (800ms to 2500ms for very random feel)
+        const nextDelay = randomBetween(800, 2500);
+        bloomScheduleTimer = setTimeout(scheduleNextBloom, nextDelay);
+      }
+
+      function startBloom() {
+        bloomActive = true;
+        let container = document.getElementById('bloom-container');
+        if (!container) {
+          container = document.createElement('div');
+          container.id = 'bloom-container';
+          document.body.appendChild(container);
+        }
+        // Spawn initial flowers with slight stagger
+        for (let i = 0; i < 3; i++) {
+          const t = setTimeout(function() { spawnFlower(); }, i * 300);
+          bloomTimers.push(t);
+        }
+        scheduleNextBloom();
+      }
+
+      function stopBloom() {
+        bloomActive = false;
+        // Clear all timers
+        bloomTimers.forEach(function(t) { clearTimeout(t); });
+        bloomTimers = [];
+        if (bloomScheduleTimer) {
+          clearTimeout(bloomScheduleTimer);
+          bloomScheduleTimer = null;
+        }
+        // Remove all flowers
+        const container = document.getElementById('bloom-container');
+        if (container) container.innerHTML = '';
+      }
+
+      window.toggleBloomMode = function() {
+        const btn = document.getElementById('bloom-toggle-btn');
+        if (bloomActive) {
+          stopBloom();
+          if (btn) btn.classList.remove('active');
+        } else {
+          startBloom();
+          if (btn) btn.classList.add('active');
+        }
+      };
+
       function openModal(id) {
         document.getElementById('modal-backdrop').classList.add('active');
         document.getElementById(id).classList.add('active');
