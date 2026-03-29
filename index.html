@@ -765,25 +765,32 @@
                 continue
               }
 
-              const slot = slots.reduce((best, s) => {
-                const bestW = best.right - best.left
-                const sW = s.right - s.left
-                return sW > bestW ? s : best
-              })
+              // Sort slots left-to-right so text flows naturally across both sides of the sun
+              slots.sort((a, b) => a.left - b.left)
 
-              const line = layoutNextLine(prepared, cursor, slot.right - slot.left)
-              if (line === null) {
-                textExhausted = true
-                break
+              let filledAny = false
+              for (let sIdx = 0; sIdx < slots.length; sIdx++) {
+                const slot = slots[sIdx]
+                const line = layoutNextLine(prepared, cursor, slot.right - slot.left)
+                if (line === null) {
+                  textExhausted = true
+                  break
+                }
+
+                allLines.push({
+                  x: Math.round(slot.left),
+                  y: Math.round(lineTop),
+                  text: line.text,
+                  width: line.width,
+                })
+                cursor = line.end
+                filledAny = true
               }
-
-              allLines.push({
-                x: Math.round(slot.left),
-                y: Math.round(lineTop),
-                text: line.text,
-                width: line.width,
-              })
-              cursor = line.end
+              if (textExhausted) break
+              if (!filledAny) {
+                lineTop += LINE_HEIGHT
+                continue
+              }
               lineTop += LINE_HEIGHT
             }
 
