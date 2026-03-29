@@ -106,7 +106,7 @@
         width: 1px;
         height: 1px;
         overflow: hidden;
-        clip: rect(0, 0, 0, 0);
+        clip-path: inset(50%);
         white-space: nowrap;
       }
       .sunset-overlay {
@@ -116,6 +116,7 @@
         position: absolute;
         white-space: nowrap;
         pointer-events: auto;
+        z-index: 1;
       }
       .sunset-sun {
         position: absolute;
@@ -124,9 +125,6 @@
         z-index: 0;
         transition: transform 0.3s ease;
       }
-      .sunset-overlay .line {
-        z-index: 1;
-      }
       @media print {
         .sunset-overlay, .sunset-sun { display: none !important; }
         .sunset-bio-original.hidden-for-sunset {
@@ -134,7 +132,7 @@
           width: auto !important;
           height: auto !important;
           overflow: visible !important;
-          clip: auto !important;
+          clip-path: none !important;
           white-space: normal !important;
         }
       }
@@ -519,10 +517,9 @@
 
         original.classList.add('hidden-for-sunset')
 
-        // First pass: compute natural text height without sun to know where center is
-        let naturalHeight = 0
-        {
+        function computeNaturalHeight() {
           const regionW = container.offsetWidth
+          let height = 0
           for (let pIdx = 0; pIdx < preparedParagraphs.length; pIdx++) {
             const prepared = preparedParagraphs[pIdx]
             let cursor = { segmentIndex: 0, graphemeIndex: 0 }
@@ -533,10 +530,13 @@
               cursor = line.end
               lineCount++
             }
-            naturalHeight += lineCount * LINE_HEIGHT
-            if (pIdx < preparedParagraphs.length - 1) naturalHeight += PARAGRAPH_GAP
+            height += lineCount * LINE_HEIGHT
+            if (pIdx < preparedParagraphs.length - 1) height += PARAGRAPH_GAP
           }
+          return height
         }
+
+        let naturalHeight = computeNaturalHeight()
 
         function render(now) {
           const regionW = container.offsetWidth
@@ -651,11 +651,13 @@
 
         requestAnimationFrame(render)
 
-        // Recompute on resize
+        // Recompute natural height on resize (debounced)
         let resizeTimer = null
         window.addEventListener('resize', () => {
-          // Layout will naturally update on next animation frame
-          // but we need to re-prepare if font metrics changed
+          clearTimeout(resizeTimer)
+          resizeTimer = setTimeout(() => {
+            naturalHeight = computeNaturalHeight()
+          }, 150)
         })
       }
 
