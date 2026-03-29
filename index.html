@@ -306,16 +306,15 @@
       .bloom-toggle.active .bloom-toggle-thumb {
         transform: translateX(16px);
       }
-      /* Bloom flower container */
+      /* Bloom flower container — positioned within the bio text area */
       #bloom-container {
-        position: fixed;
+        position: absolute;
         inset: 0;
         pointer-events: none;
-        z-index: 40;
-        overflow: hidden;
+        z-index: 2;
+        overflow: visible;
       }
       .bloom-flower {
-        position: absolute;
         pointer-events: none;
         opacity: 0;
         transform: scale(0) rotate(0deg);
@@ -435,9 +434,6 @@
           <span class="bloom-toggle-track"><span class="bloom-toggle-thumb"></span></span>
         </button>
       </div>
-
-      <!-- Bloom flower container -->
-      <div id="bloom-container"></div>
 
       <!-- Latest blog post preview -->
       <div class="mt-10 mb-2">
@@ -653,6 +649,9 @@
         return easeInOutCubic(t)
       }
 
+      // Expose pretext functions to window for bloom mode text wrapping
+      window._layoutNextLine = layoutNextLine
+
       // Geometry helpers (from pretext editorial-engine demo)
       function circleIntervalForBand(cx, cy, r, bandTop, bandBottom, hPad, vPad) {
         const top = bandTop - vPad
@@ -663,6 +662,7 @@
         const maxDx = Math.sqrt(r * r - minDy * minDy)
         return { left: cx - maxDx - hPad, right: cx + maxDx + hPad }
       }
+      window._circleIntervalForBand = circleIntervalForBand
 
       function carveTextLineSlots(base, blocked) {
         let slots = [base]
@@ -707,6 +707,7 @@
 
         if (!preparedParagraphs) {
           preparedParagraphs = BIO_TEXT.map(text => prepareWithSegments(text, FONT))
+          window._pretextPrepared = preparedParagraphs
         }
 
         const container = document.getElementById('sunset-bio-container')
@@ -981,10 +982,25 @@
           const horizonEl = document.getElementById('sunset-horizon-glow')
           if (horizonEl) horizonEl.remove()
         } else {
+          // Disable bloom mode first (mutually exclusive)
+          if (window._bloomActive) {
+            window.toggleBloomMode()
+          }
           startSunset()
           if (btn) btn.classList.add('active')
         }
       }
+
+      // Expose sunsetActive to window for mutual exclusion
+      Object.defineProperty(window, '_sunsetActive', { get() { return sunsetActive } })
+
+      // Eagerly prepare pretext paragraphs so bloom mode can use them immediately
+      document.fonts.ready.then(() => {
+        if (!preparedParagraphs) {
+          preparedParagraphs = BIO_TEXT.map(text => prepareWithSegments(text, FONT))
+          window._pretextPrepared = preparedParagraphs
+        }
+      })
     </script>
 
     <script>
@@ -1136,20 +1152,28 @@
         if (!bloomActive) return;
 
         const container = document.getElementById('bloom-container');
-        if (!container) return;
+        const bioContainer = document.getElementById('sunset-bio-container');
+        if (!container || !bioContainer) return;
 
         const flowerFn = randomPick(FLOWER_TYPES);
-        const size = Math.round(randomBetween(30, 75));
-        const x = randomBetween(5, 90); // percentage
-        const y = randomBetween(5, 90); // percentage
-        const duration = randomBetween(3, 6); // seconds
+        const size = Math.round(randomBetween(35, 70));
+        const duration = randomBetween(4, 7); // seconds
         const rotation = randomBetween(-30, 30);
+
+        // Place flowers within the bio container bounds (using pixel positions)
+        const containerW = bioContainer.offsetWidth;
+        const containerH = bioContainer.offsetHeight || 300;
+        const cx = randomBetween(size / 2 + 10, containerW - size / 2 - 10);
+        const cy = randomBetween(size / 2 + 10, Math.max(containerH - size / 2 - 10, size + 20));
+        const radius = size / 2;
 
         // Outer wrapper handles rotation, inner handles bloom animation
         const wrapper = document.createElement('div');
         wrapper.style.position = 'absolute';
-        wrapper.style.left = x + '%';
-        wrapper.style.top = y + '%';
+        wrapper.style.left = (cx - radius) + 'px';
+        wrapper.style.top = (cy - radius) + 'px';
+        wrapper.style.width = size + 'px';
+        wrapper.style.height = size + 'px';
         wrapper.style.transform = `rotate(${rotation}deg)`;
         wrapper.style.pointerEvents = 'none';
 
@@ -1162,6 +1186,10 @@
         wrapper.appendChild(el);
         container.appendChild(wrapper);
 
+        // Track flower for text wrapping
+        const flowerData = { cx: cx, cy: cy, radius: radius + 8, el: wrapper };
+        bloomFlowers.push(flowerData);
+
         // Trigger bloom animation
         requestAnimationFrame(function() {
           el.classList.add('blooming');
@@ -1172,6 +1200,9 @@
           if (wrapper.parentNode) wrapper.parentNode.removeChild(wrapper);
           var idx = bloomTimers.indexOf(removeTimer);
           if (idx > -1) bloomTimers.splice(idx, 1);
+          // Remove from tracked flowers
+          var fIdx = bloomFlowers.indexOf(flowerData);
+          if (fIdx > -1) bloomFlowers.splice(fIdx, 1);
         }, duration * 1000 + 100);
         bloomTimers.push(removeTimer);
       }
@@ -1192,20 +1223,187 @@
         bloomScheduleTimer = setTimeout(scheduleNextBloom, nextDelay);
       }
 
+      // Track active bloom flowers for text wrapping
+      let bloomFlowers = []; // { cx, cy, radius, el }
+      let bloomAnimFrameId = null;
+      let bloomResizeHandler = null;
+
+      // Bloom line pool (separate from sunset's linePool)
+      const bloomLinePool = [];
+      function syncBloomLinePool(container, count) {
+        while (bloomLinePool.length < count) {
+          const el = document.createElement('div');
+          el.className = 'line';
+          container.appendChild(el);
+          bloomLinePool.push(el);
+        }
+        for (let i = 0; i < bloomLinePool.length; i++) {
+          bloomLinePool[i].style.display = i < count ? '' : 'none';
+        }
+      }
+
+      // Access pretext functions via window (set from the module script)
+      function renderBloomText() {
+        if (!bloomActive) return;
+
+        const container = document.getElementById('sunset-bio-container');
+        const overlay = document.getElementById('sunset-overlay');
+        if (!container || !overlay || !window._pretextPrepared) {
+          bloomAnimFrameId = requestAnimationFrame(renderBloomText);
+          return;
+        }
+
+        const regionW = container.offsetWidth;
+        const prepared = window._pretextPrepared;
+        const BLOOM_LINE_HEIGHT = 24;
+        const BLOOM_PARAGRAPH_GAP = 24;
+        const BLOOM_MIN_SLOT = 40;
+        const BLOOM_FONT = '16px "Source Sans Pro", sans-serif';
+
+        const allLines = [];
+        let globalY = 0;
+
+        for (let pIdx = 0; pIdx < prepared.length; pIdx++) {
+          const prep = prepared[pIdx];
+          let cursor = { segmentIndex: 0, graphemeIndex: 0 };
+          let lineTop = globalY;
+          let textExhausted = false;
+          let safetyCount = 0;
+
+          while (!textExhausted && safetyCount < 500) {
+            safetyCount++;
+            const bandTop = lineTop;
+            const bandBottom = lineTop + BLOOM_LINE_HEIGHT;
+
+            // Build blocked intervals from all active bloom flowers
+            const blocked = [];
+            for (let f = 0; f < bloomFlowers.length; f++) {
+              const flower = bloomFlowers[f];
+              // Use circleIntervalForBand (available from sunset module scope via window)
+              const interval = window._circleIntervalForBand(
+                flower.cx, flower.cy, flower.radius,
+                bandTop, bandBottom, 10, 2
+              );
+              if (interval) blocked.push(interval);
+            }
+
+            // Carve slots
+            let slots = [{ left: 0, right: regionW }];
+            for (let b = 0; b < blocked.length; b++) {
+              const iv = blocked[b];
+              const next = [];
+              for (let s = 0; s < slots.length; s++) {
+                const slot = slots[s];
+                if (iv.right <= slot.left || iv.left >= slot.right) {
+                  next.push(slot);
+                  continue;
+                }
+                if (iv.left > slot.left) next.push({ left: slot.left, right: iv.left });
+                if (iv.right < slot.right) next.push({ left: iv.right, right: slot.right });
+              }
+              slots = next;
+            }
+            slots = slots.filter(function(s) { return s.right - s.left >= BLOOM_MIN_SLOT; });
+
+            if (slots.length === 0) {
+              lineTop += BLOOM_LINE_HEIGHT;
+              // Safety: don't go infinitely far
+              if (lineTop > globalY + 2000) break;
+              continue;
+            }
+
+            slots.sort(function(a, b) { return a.left - b.left; });
+
+            let filledAny = false;
+            for (let sIdx = 0; sIdx < slots.length; sIdx++) {
+              const slot = slots[sIdx];
+              const line = window._layoutNextLine(prep, cursor, slot.right - slot.left);
+              if (line === null) {
+                textExhausted = true;
+                break;
+              }
+              allLines.push({
+                x: Math.round(slot.left),
+                y: Math.round(lineTop),
+                text: line.text,
+                width: line.width
+              });
+              cursor = line.end;
+              filledAny = true;
+            }
+            if (textExhausted) break;
+            if (!filledAny) {
+              lineTop += BLOOM_LINE_HEIGHT;
+              continue;
+            }
+            lineTop += BLOOM_LINE_HEIGHT;
+          }
+
+          globalY = lineTop + BLOOM_PARAGRAPH_GAP;
+        }
+
+        // Update DOM
+        syncBloomLinePool(overlay, allLines.length);
+        for (let i = 0; i < allLines.length; i++) {
+          const el = bloomLinePool[i];
+          const line = allLines[i];
+          el.textContent = line.text;
+          el.style.left = line.x + 'px';
+          el.style.top = line.y + 'px';
+          el.style.font = BLOOM_FONT;
+          el.style.lineHeight = BLOOM_LINE_HEIGHT + 'px';
+          el.style.color = '#1a1a1a';
+        }
+
+        // Update container height
+        const lastLine = allLines[allLines.length - 1];
+        if (lastLine) {
+          let maxFlowerBottom = 0;
+          for (let f = 0; f < bloomFlowers.length; f++) {
+            const fb = bloomFlowers[f].cy + bloomFlowers[f].radius;
+            if (fb > maxFlowerBottom) maxFlowerBottom = fb;
+          }
+          const totalHeight = Math.max(
+            lastLine.y + BLOOM_LINE_HEIGHT + 10,
+            maxFlowerBottom + 10
+          );
+          container.style.height = totalHeight + 'px';
+        }
+
+        bloomAnimFrameId = requestAnimationFrame(renderBloomText);
+      }
+
       function startBloom() {
         bloomActive = true;
+        // Use the bio container for bloom flowers (text wrapping)
+        const bioContainer = document.getElementById('sunset-bio-container');
         let container = document.getElementById('bloom-container');
         if (!container) {
           container = document.createElement('div');
           container.id = 'bloom-container';
-          document.body.appendChild(container);
+          if (bioContainer) {
+            bioContainer.appendChild(container);
+          } else {
+            document.body.appendChild(container);
+          }
         }
+        // Hide original bio text for pretext overlay
+        const original = document.getElementById('sunset-bio-original');
+        if (original) original.classList.add('hidden-for-sunset');
+        // Show overlay
+        const overlay = document.getElementById('sunset-overlay');
+        if (overlay) overlay.setAttribute('aria-hidden', 'true');
+        // Start text wrapping render loop
+        bloomAnimFrameId = requestAnimationFrame(renderBloomText);
         // Spawn initial flowers with slight stagger
         for (let i = 0; i < 3; i++) {
           const t = setTimeout(function() { spawnFlower(); }, i * 300);
           bloomTimers.push(t);
         }
         scheduleNextBloom();
+        // Handle resize
+        bloomResizeHandler = function() { /* pretext re-layouts automatically in render loop */ };
+        window.addEventListener('resize', bloomResizeHandler);
       }
 
       function stopBloom() {
@@ -1217,10 +1415,32 @@
           clearTimeout(bloomScheduleTimer);
           bloomScheduleTimer = null;
         }
+        // Cancel render loop
+        if (bloomAnimFrameId) {
+          cancelAnimationFrame(bloomAnimFrameId);
+          bloomAnimFrameId = null;
+        }
+        if (bloomResizeHandler) {
+          window.removeEventListener('resize', bloomResizeHandler);
+          bloomResizeHandler = null;
+        }
         // Remove all flowers
+        bloomFlowers = [];
         const container = document.getElementById('bloom-container');
-        if (container) container.innerHTML = '';
+        if (container && container.parentNode) container.parentNode.removeChild(container);
+        // Restore original bio text
+        const original = document.getElementById('sunset-bio-original');
+        const overlay = document.getElementById('sunset-overlay');
+        const bioContainer = document.getElementById('sunset-bio-container');
+        if (original) original.classList.remove('hidden-for-sunset');
+        if (overlay) overlay.innerHTML = '';
+        if (bioContainer) bioContainer.style.height = '';
+        // Reset bloom line pool
+        bloomLinePool.length = 0;
       }
+
+      // Expose bloomActive to window for mutual exclusion
+      Object.defineProperty(window, '_bloomActive', { get: function() { return bloomActive; } });
 
       window.toggleBloomMode = function() {
         const btn = document.getElementById('bloom-toggle-btn');
@@ -1228,6 +1448,10 @@
           stopBloom();
           if (btn) btn.classList.remove('active');
         } else {
+          // Disable sunset mode first (mutually exclusive)
+          if (window._sunsetActive) {
+            window.toggleSunsetMode();
+          }
           startBloom();
           if (btn) btn.classList.add('active');
         }
