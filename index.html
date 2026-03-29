@@ -260,6 +260,99 @@
         width: 18px;
         height: 18px;
       }
+      /* Bloom mode toggle switch */
+      .bloom-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: none;
+        border: none;
+        font-family: 'Source Sans Pro', sans-serif;
+        font-size: 0.875rem;
+        color: #D4648A;
+        cursor: pointer;
+        vertical-align: middle;
+        padding: 0;
+      }
+      .bloom-toggle-label {
+        transition: opacity 0.2s ease;
+      }
+      .bloom-toggle:hover .bloom-toggle-label {
+        opacity: 0.7;
+      }
+      .bloom-toggle-track {
+        position: relative;
+        width: 36px;
+        height: 20px;
+        background: #ccc;
+        border-radius: 10px;
+        transition: background 0.3s ease;
+        flex-shrink: 0;
+      }
+      .bloom-toggle.active .bloom-toggle-track {
+        background: #D4648A;
+      }
+      .bloom-toggle-thumb {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 16px;
+        height: 16px;
+        background: #fff;
+        border-radius: 50%;
+        transition: transform 0.3s ease;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      }
+      .bloom-toggle.active .bloom-toggle-thumb {
+        transform: translateX(16px);
+      }
+      /* Bloom flower container — positioned within the bio text area */
+      #bloom-container {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 2;
+        overflow: visible;
+      }
+      .bloom-flower {
+        pointer-events: none;
+        opacity: 0;
+        transform: scale(0) rotate(0deg);
+      }
+      /* Bloom animation */
+      @keyframes bloomIn {
+        0% {
+          opacity: 0;
+          transform: scale(0) rotate(-30deg);
+        }
+        15% {
+          opacity: 0.7;
+          transform: scale(0.4) rotate(-10deg);
+        }
+        40% {
+          opacity: 1;
+          transform: scale(1.05) rotate(5deg);
+        }
+        60% {
+          opacity: 1;
+          transform: scale(0.98) rotate(-2deg);
+        }
+        75% {
+          opacity: 1;
+          transform: scale(1) rotate(0deg);
+        }
+        90% {
+          opacity: 0.6;
+          transform: scale(0.95) rotate(3deg);
+        }
+        100% {
+          opacity: 0;
+          transform: scale(0.5) rotate(10deg);
+        }
+      }
+      .bloom-flower.blooming {
+        animation: bloomIn var(--bloom-duration, 4s) cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      }
       .entry {
         border-left: 3px solid #FCF7E9;
         padding-left: 1rem;
@@ -336,6 +429,10 @@
           <span class="sunset-toggle-label">Sunset Mode</span>
           <span class="sunset-toggle-track"><span class="sunset-toggle-thumb"></span></span>
         </button>
+        <button id="bloom-toggle-btn" class="bloom-toggle" onclick="toggleBloomMode()">
+          <span class="bloom-toggle-label">Bloom Mode</span>
+          <span class="bloom-toggle-track"><span class="bloom-toggle-thumb"></span></span>
+        </button>
       </div>
 
       <!-- Latest blog post preview -->
@@ -354,7 +451,7 @@
       </div>
 
       <!-- Turkish tile-inspired ornamental decorations -->
-      <div class="ornaments">
+      <div class="ornaments" id="ornaments">
         <!-- Tulip (lale) - iconic İznik motif -->
         <span class="ornament ornament-float" style="animation-delay: 0s;">
           <svg viewBox="0 0 24 24"><path d="M12 2C10 6 6 8 6 12c0 3 2.5 5 6 5s6-2 6-5c0-4-4-6-6-10z"/><line x1="12" y1="17" x2="12" y2="22" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M9 20q3-2 6 0" stroke="currentColor" stroke-width="1" fill="none"/></svg>
@@ -552,6 +649,9 @@
         return easeInOutCubic(t)
       }
 
+      // Expose pretext functions to window for bloom mode text wrapping
+      window._layoutNextLine = layoutNextLine
+
       // Geometry helpers (from pretext editorial-engine demo)
       function circleIntervalForBand(cx, cy, r, bandTop, bandBottom, hPad, vPad) {
         const top = bandTop - vPad
@@ -562,6 +662,7 @@
         const maxDx = Math.sqrt(r * r - minDy * minDy)
         return { left: cx - maxDx - hPad, right: cx + maxDx + hPad }
       }
+      window._circleIntervalForBand = circleIntervalForBand
 
       function carveTextLineSlots(base, blocked) {
         let slots = [base]
@@ -606,6 +707,7 @@
 
         if (!preparedParagraphs) {
           preparedParagraphs = BIO_TEXT.map(text => prepareWithSegments(text, FONT))
+          window._pretextPrepared = preparedParagraphs
         }
 
         const container = document.getElementById('sunset-bio-container')
@@ -879,14 +981,494 @@
           // Remove horizon glow on deactivate
           const horizonEl = document.getElementById('sunset-horizon-glow')
           if (horizonEl) horizonEl.remove()
+          // Show ornaments again
+          const ornEl = document.getElementById('ornaments')
+          if (ornEl) ornEl.style.display = ''
         } else {
+          // Disable bloom mode first (mutually exclusive)
+          if (window._bloomActive) {
+            window.toggleBloomMode()
+          }
           startSunset()
           if (btn) btn.classList.add('active')
+          // Hide ornaments during sunset mode
+          const ornEl = document.getElementById('ornaments')
+          if (ornEl) ornEl.style.display = 'none'
         }
       }
+
+      // Expose sunsetActive to window for mutual exclusion
+      Object.defineProperty(window, '_sunsetActive', { get() { return sunsetActive } })
+
+      // Eagerly prepare pretext paragraphs so bloom mode can use them immediately
+      document.fonts.ready.then(() => {
+        if (!preparedParagraphs) {
+          preparedParagraphs = BIO_TEXT.map(text => prepareWithSegments(text, FONT))
+          window._pretextPrepared = preparedParagraphs
+        }
+      })
     </script>
 
     <script>
+      /* ==================== BLOOM MODE ==================== */
+      let bloomActive = false;
+      let bloomTimers = [];
+      let bloomScheduleTimer = null;
+
+      // Flower SVG definitions - each returns an SVG string
+      // All flowers are hand-crafted with beautiful petal shapes
+      const FLOWER_TYPES = [
+        // Sakura (cherry blossom) - 5 petals with notched tips
+        function sakura(size, color) {
+          const c = color || randomPick(['#FFB7C5', '#FFC0CB', '#FF9CAD', '#FFD1DC', '#F4A7BB']);
+          const center = randomPick(['#FFE066', '#FFD700', '#FFEC80']);
+          return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <g transform="translate(50,50)">
+              ${[0,72,144,216,288].map(a => `<g transform="rotate(${a})">
+                <path d="M0,-8 C-10,-25 -18,-40 -6,-42 C-2,-43 2,-43 6,-42 C18,-40 10,-25 0,-8Z" fill="${c}" opacity="0.9"/>
+              </g>`).join('')}
+              <circle cx="0" cy="0" r="6" fill="${center}"/>
+              ${[0,60,120,180,240,300].map(a => `<circle cx="${3*Math.cos(a*Math.PI/180)}" cy="${3*Math.sin(a*Math.PI/180)}" r="1.2" fill="${randomPick(['#FF6B8A','#E85D75'])}"/>`).join('')}
+            </g>
+          </svg>`;
+        },
+        // Camellia - layered round petals, lush
+        function camellia(size, color) {
+          const c = color || randomPick(['#E8435A', '#D4364D', '#FF6B81', '#C94C66', '#E2556B']);
+          const center = randomPick(['#FFE066', '#FFD700']);
+          return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <g transform="translate(50,50)">
+              ${[0,45,90,135,180,225,270,315].map(a => `<g transform="rotate(${a})">
+                <ellipse cx="0" cy="-18" rx="12" ry="18" fill="${c}" opacity="0.85"/>
+              </g>`).join('')}
+              ${[22,67,112,157,202,247,292,337].map(a => `<g transform="rotate(${a})">
+                <ellipse cx="0" cy="-12" rx="9" ry="13" fill="${c}" opacity="0.7"/>
+              </g>`).join('')}
+              <circle cx="0" cy="0" r="8" fill="${center}"/>
+              ${[0,30,60,90,120,150,180,210,240,270,300,330].map(a => `<circle cx="${5*Math.cos(a*Math.PI/180)}" cy="${5*Math.sin(a*Math.PI/180)}" r="0.8" fill="#D4A017" opacity="0.8"/>`).join('')}
+            </g>
+          </svg>`;
+        },
+        // Peony - many ruffled layered petals
+        function peony(size, color) {
+          const c = color || randomPick(['#F8A4C8', '#E88AAE', '#FFB6D3', '#F09AC0', '#FFC4D6']);
+          const darker = randomPick(['#D4648A', '#C9577D']);
+          const center = randomPick(['#FFE680', '#FFDA44']);
+          return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <g transform="translate(50,50)">
+              ${[0,60,120,180,240,300].map(a => `<g transform="rotate(${a})">
+                <path d="M0,-6 C-14,-22 -22,-38 -8,-40 C0,-41 8,-40 8,-40 C22,-38 14,-22 0,-6Z" fill="${c}" opacity="0.75"/>
+              </g>`).join('')}
+              ${[30,90,150,210,270,330].map(a => `<g transform="rotate(${a})">
+                <path d="M0,-5 C-10,-18 -16,-30 -5,-31 C0,-32 5,-31 5,-31 C16,-30 10,-18 0,-5Z" fill="${darker}" opacity="0.65"/>
+              </g>`).join('')}
+              ${[15,75,135,195,255,315].map(a => `<g transform="rotate(${a})">
+                <ellipse cx="0" cy="-10" rx="6" ry="10" fill="${c}" opacity="0.55"/>
+              </g>`).join('')}
+              <circle cx="0" cy="0" r="7" fill="${center}"/>
+            </g>
+          </svg>`;
+        },
+        // Chrysanthemum - many thin layered petals radiating out
+        function chrysanthemum(size, color) {
+          const c = color || randomPick(['#FFD700', '#FFA500', '#FF8C42', '#FFB347', '#FFCC33']);
+          const inner = randomPick(['#FF6B00', '#E65C00']);
+          const center = randomPick(['#8B4513', '#6B3410']);
+          const petalCount = 18;
+          return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <g transform="translate(50,50)">
+              ${Array.from({length: petalCount}, (_, i) => {
+                const a = (360 / petalCount) * i;
+                return `<g transform="rotate(${a})"><ellipse cx="0" cy="-22" rx="4.5" ry="18" fill="${c}" opacity="0.8"/></g>`;
+              }).join('')}
+              ${Array.from({length: petalCount}, (_, i) => {
+                const a = (360 / petalCount) * i + 10;
+                return `<g transform="rotate(${a})"><ellipse cx="0" cy="-14" rx="3.5" ry="12" fill="${inner}" opacity="0.7"/></g>`;
+              }).join('')}
+              <circle cx="0" cy="0" r="6" fill="${center}"/>
+            </g>
+          </svg>`;
+        },
+        // Daisy - simple white petals with yellow center
+        function daisy(size, color) {
+          const c = color || randomPick(['#FFFFFF', '#FFF8DC', '#FFFACD', '#F0FFF0']);
+          const center = randomPick(['#FFD700', '#FFC107', '#FFB300']);
+          return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <g transform="translate(50,50)">
+              ${Array.from({length: 12}, (_, i) => {
+                const a = 30 * i;
+                return `<g transform="rotate(${a})"><ellipse cx="0" cy="-20" rx="6" ry="16" fill="${c}" opacity="0.9" stroke="#E8E0D0" stroke-width="0.3"/></g>`;
+              }).join('')}
+              <circle cx="0" cy="0" r="9" fill="${center}"/>
+              ${Array.from({length: 8}, (_, i) => {
+                const a = 45 * i;
+                const r = 4 + Math.random() * 3;
+                return `<circle cx="${r*Math.cos(a*Math.PI/180)}" cy="${r*Math.sin(a*Math.PI/180)}" r="1" fill="#E8A800" opacity="0.6"/>`;
+              }).join('')}
+            </g>
+          </svg>`;
+        },
+        // Rose - spiral-layered petals
+        function rose(size, color) {
+          const c = color || randomPick(['#E53E6B', '#C62E50', '#FF4D7A', '#D63964', '#B82550']);
+          const lighter = randomPick(['#FF8FAB', '#FF6B8A']);
+          const center = randomPick(['#8B0000', '#A0153E']);
+          return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <g transform="translate(50,50)">
+              ${[0,72,144,216,288].map(a => `<g transform="rotate(${a})">
+                <path d="M0,-5 C-12,-20 -20,-36 -6,-38 C0,-39 6,-38 6,-38 C20,-36 12,-20 0,-5Z" fill="${c}" opacity="0.8"/>
+              </g>`).join('')}
+              ${[36,108,180,252,324].map(a => `<g transform="rotate(${a})">
+                <path d="M0,-4 C-8,-14 -14,-26 -4,-27 C0,-28 4,-27 4,-27 C14,-26 8,-14 0,-4Z" fill="${lighter}" opacity="0.7"/>
+              </g>`).join('')}
+              <circle cx="0" cy="0" r="5" fill="${center}"/>
+              <path d="M-2,-3 C-1,-5 1,-5 2,-3 C3,-1 1,1 0,1 C-1,1 -3,-1 -2,-3Z" fill="${lighter}" opacity="0.5"/>
+            </g>
+          </svg>`;
+        },
+        // Lotus - elegant petals
+        function lotus(size, color) {
+          const c = color || randomPick(['#FFB6C1', '#FFA0B4', '#FF8DA1', '#FFDDE4']);
+          const tips = randomPick(['#FF69B4', '#FF1493']);
+          const center = randomPick(['#FFE066', '#FFDA44']);
+          return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <g transform="translate(50,50)">
+              ${[-60,-30,0,30,60].map(a => `<g transform="rotate(${a})">
+                <path d="M0,-5 C-8,-18 -12,-38 0,-42 C12,-38 8,-18 0,-5Z" fill="${c}" opacity="0.85" stroke="${tips}" stroke-width="0.5"/>
+              </g>`).join('')}
+              ${[-45,-15,15,45].map(a => `<g transform="rotate(${a})">
+                <path d="M0,-4 C-6,-12 -8,-28 0,-31 C8,-28 6,-12 0,-4Z" fill="${c}" opacity="0.6"/>
+              </g>`).join('')}
+              <circle cx="0" cy="0" r="5" fill="${center}"/>
+              ${[0,60,120,180,240,300].map(a => `<circle cx="${3*Math.cos(a*Math.PI/180)}" cy="${3*Math.sin(a*Math.PI/180)}" r="0.8" fill="#D4A017"/>`).join('')}
+            </g>
+          </svg>`;
+        }
+      ];
+
+      function randomPick(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+      }
+
+      function randomBetween(min, max) {
+        return min + Math.random() * (max - min);
+      }
+
+      function spawnFlower() {
+        if (!bloomActive) return;
+
+        const container = document.getElementById('bloom-container');
+        const bioContainer = document.getElementById('sunset-bio-container');
+        if (!container || !bioContainer) return;
+
+        const flowerFn = randomPick(FLOWER_TYPES);
+        const size = Math.round(randomBetween(35, 70));
+        const duration = randomBetween(4, 7); // seconds
+        const rotation = randomBetween(-30, 30);
+
+        // Place flowers within the bio container bounds (using pixel positions)
+        const containerW = bioContainer.offsetWidth;
+        const containerH = bioContainer.offsetHeight || 300;
+        const cx = randomBetween(size / 2 + 10, containerW - size / 2 - 10);
+        const cy = randomBetween(size / 2 + 10, Math.max(containerH - size / 2 - 10, size + 20));
+        const radius = size / 2;
+
+        // Outer wrapper handles rotation, inner handles bloom animation
+        const wrapper = document.createElement('div');
+        wrapper.style.position = 'absolute';
+        wrapper.style.left = (cx - radius) + 'px';
+        wrapper.style.top = (cy - radius) + 'px';
+        wrapper.style.width = size + 'px';
+        wrapper.style.height = size + 'px';
+        wrapper.style.transform = `rotate(${rotation}deg)`;
+        wrapper.style.pointerEvents = 'none';
+
+        const el = document.createElement('div');
+        el.className = 'bloom-flower';
+        el.innerHTML = flowerFn(size);
+        el.style.setProperty('--bloom-duration', duration + 's');
+        el.style.position = 'relative';
+
+        wrapper.appendChild(el);
+        container.appendChild(wrapper);
+
+        // Track flower for text wrapping
+        const flowerData = { cx: cx, cy: cy, radius: radius + 8, el: wrapper };
+        bloomFlowers.push(flowerData);
+
+        // Trigger bloom animation
+        requestAnimationFrame(function() {
+          el.classList.add('blooming');
+        });
+
+        // Remove after animation completes
+        const removeTimer = setTimeout(function() {
+          if (wrapper.parentNode) wrapper.parentNode.removeChild(wrapper);
+          var idx = bloomTimers.indexOf(removeTimer);
+          if (idx > -1) bloomTimers.splice(idx, 1);
+          // Remove from tracked flowers
+          var fIdx = bloomFlowers.indexOf(flowerData);
+          if (fIdx > -1) bloomFlowers.splice(fIdx, 1);
+        }, duration * 1000 + 100);
+        bloomTimers.push(removeTimer);
+      }
+
+      function scheduleNextBloom() {
+        if (!bloomActive) return;
+
+        // Truly random: sometimes spawn 1, sometimes 2-3 at once
+        const batchSize = Math.random() < 0.3 ? Math.floor(randomBetween(2, 4)) : 1;
+        for (let i = 0; i < batchSize; i++) {
+          const stagger = i * randomBetween(100, 400);
+          const t = setTimeout(function() { spawnFlower(); }, stagger);
+          bloomTimers.push(t);
+        }
+
+        // Random delay before next bloom event (800ms to 2500ms for very random feel)
+        const nextDelay = randomBetween(800, 2500);
+        bloomScheduleTimer = setTimeout(scheduleNextBloom, nextDelay);
+      }
+
+      // Track active bloom flowers for text wrapping
+      let bloomFlowers = []; // { cx, cy, radius, el }
+      let bloomAnimFrameId = null;
+      let bloomResizeHandler = null;
+
+      // Bloom line pool (separate from sunset's linePool)
+      const bloomLinePool = [];
+      function syncBloomLinePool(container, count) {
+        while (bloomLinePool.length < count) {
+          const el = document.createElement('div');
+          el.className = 'line';
+          container.appendChild(el);
+          bloomLinePool.push(el);
+        }
+        for (let i = 0; i < bloomLinePool.length; i++) {
+          bloomLinePool[i].style.display = i < count ? '' : 'none';
+        }
+      }
+
+      // Access pretext functions via window (set from the module script)
+      function renderBloomText() {
+        if (!bloomActive) return;
+
+        const container = document.getElementById('sunset-bio-container');
+        const overlay = document.getElementById('sunset-overlay');
+        if (!container || !overlay || !window._pretextPrepared) {
+          bloomAnimFrameId = requestAnimationFrame(renderBloomText);
+          return;
+        }
+
+        const regionW = container.offsetWidth;
+        const prepared = window._pretextPrepared;
+        const BLOOM_LINE_HEIGHT = 24;
+        const BLOOM_PARAGRAPH_GAP = 24;
+        const BLOOM_MIN_SLOT = 40;
+        const BLOOM_FONT = '16px "Source Sans Pro", sans-serif';
+
+        const allLines = [];
+        let globalY = 0;
+
+        for (let pIdx = 0; pIdx < prepared.length; pIdx++) {
+          const prep = prepared[pIdx];
+          let cursor = { segmentIndex: 0, graphemeIndex: 0 };
+          let lineTop = globalY;
+          let textExhausted = false;
+          let safetyCount = 0;
+
+          while (!textExhausted && safetyCount < 500) {
+            safetyCount++;
+            const bandTop = lineTop;
+            const bandBottom = lineTop + BLOOM_LINE_HEIGHT;
+
+            // Build blocked intervals from all active bloom flowers
+            const blocked = [];
+            for (let f = 0; f < bloomFlowers.length; f++) {
+              const flower = bloomFlowers[f];
+              // Use circleIntervalForBand (available from sunset module scope via window)
+              const interval = window._circleIntervalForBand(
+                flower.cx, flower.cy, flower.radius,
+                bandTop, bandBottom, 10, 2
+              );
+              if (interval) blocked.push(interval);
+            }
+
+            // Carve slots
+            let slots = [{ left: 0, right: regionW }];
+            for (let b = 0; b < blocked.length; b++) {
+              const iv = blocked[b];
+              const next = [];
+              for (let s = 0; s < slots.length; s++) {
+                const slot = slots[s];
+                if (iv.right <= slot.left || iv.left >= slot.right) {
+                  next.push(slot);
+                  continue;
+                }
+                if (iv.left > slot.left) next.push({ left: slot.left, right: iv.left });
+                if (iv.right < slot.right) next.push({ left: iv.right, right: slot.right });
+              }
+              slots = next;
+            }
+            slots = slots.filter(function(s) { return s.right - s.left >= BLOOM_MIN_SLOT; });
+
+            if (slots.length === 0) {
+              lineTop += BLOOM_LINE_HEIGHT;
+              // Safety: don't go infinitely far
+              if (lineTop > globalY + 2000) break;
+              continue;
+            }
+
+            slots.sort(function(a, b) { return a.left - b.left; });
+
+            let filledAny = false;
+            for (let sIdx = 0; sIdx < slots.length; sIdx++) {
+              const slot = slots[sIdx];
+              const line = window._layoutNextLine(prep, cursor, slot.right - slot.left);
+              if (line === null) {
+                textExhausted = true;
+                break;
+              }
+              allLines.push({
+                x: Math.round(slot.left),
+                y: Math.round(lineTop),
+                text: line.text,
+                width: line.width
+              });
+              cursor = line.end;
+              filledAny = true;
+            }
+            if (textExhausted) break;
+            if (!filledAny) {
+              lineTop += BLOOM_LINE_HEIGHT;
+              continue;
+            }
+            lineTop += BLOOM_LINE_HEIGHT;
+          }
+
+          globalY = lineTop + BLOOM_PARAGRAPH_GAP;
+        }
+
+        // Update DOM
+        syncBloomLinePool(overlay, allLines.length);
+        for (let i = 0; i < allLines.length; i++) {
+          const el = bloomLinePool[i];
+          const line = allLines[i];
+          el.textContent = line.text;
+          el.style.left = line.x + 'px';
+          el.style.top = line.y + 'px';
+          el.style.font = BLOOM_FONT;
+          el.style.lineHeight = BLOOM_LINE_HEIGHT + 'px';
+          el.style.color = '#1a1a1a';
+        }
+
+        // Update container height
+        const lastLine = allLines[allLines.length - 1];
+        if (lastLine) {
+          let maxFlowerBottom = 0;
+          for (let f = 0; f < bloomFlowers.length; f++) {
+            const fb = bloomFlowers[f].cy + bloomFlowers[f].radius;
+            if (fb > maxFlowerBottom) maxFlowerBottom = fb;
+          }
+          const totalHeight = Math.max(
+            lastLine.y + BLOOM_LINE_HEIGHT + 10,
+            maxFlowerBottom + 10
+          );
+          container.style.height = totalHeight + 'px';
+        }
+
+        bloomAnimFrameId = requestAnimationFrame(renderBloomText);
+      }
+
+      function startBloom() {
+        bloomActive = true;
+        // Use the bio container for bloom flowers (text wrapping)
+        const bioContainer = document.getElementById('sunset-bio-container');
+        let container = document.getElementById('bloom-container');
+        if (!container) {
+          container = document.createElement('div');
+          container.id = 'bloom-container';
+          if (bioContainer) {
+            bioContainer.appendChild(container);
+          } else {
+            document.body.appendChild(container);
+          }
+        }
+        // Hide original bio text for pretext overlay
+        const original = document.getElementById('sunset-bio-original');
+        if (original) original.classList.add('hidden-for-sunset');
+        // Show overlay
+        const overlay = document.getElementById('sunset-overlay');
+        if (overlay) overlay.setAttribute('aria-hidden', 'true');
+        // Start text wrapping render loop
+        bloomAnimFrameId = requestAnimationFrame(renderBloomText);
+        // Spawn initial flowers with slight stagger
+        for (let i = 0; i < 3; i++) {
+          const t = setTimeout(function() { spawnFlower(); }, i * 300);
+          bloomTimers.push(t);
+        }
+        scheduleNextBloom();
+        // Handle resize
+        bloomResizeHandler = function() { /* pretext re-layouts automatically in render loop */ };
+        window.addEventListener('resize', bloomResizeHandler);
+      }
+
+      function stopBloom() {
+        bloomActive = false;
+        // Clear all timers
+        bloomTimers.forEach(function(t) { clearTimeout(t); });
+        bloomTimers = [];
+        if (bloomScheduleTimer) {
+          clearTimeout(bloomScheduleTimer);
+          bloomScheduleTimer = null;
+        }
+        // Cancel render loop
+        if (bloomAnimFrameId) {
+          cancelAnimationFrame(bloomAnimFrameId);
+          bloomAnimFrameId = null;
+        }
+        if (bloomResizeHandler) {
+          window.removeEventListener('resize', bloomResizeHandler);
+          bloomResizeHandler = null;
+        }
+        // Remove all flowers
+        bloomFlowers = [];
+        const container = document.getElementById('bloom-container');
+        if (container && container.parentNode) container.parentNode.removeChild(container);
+        // Restore original bio text
+        const original = document.getElementById('sunset-bio-original');
+        const overlay = document.getElementById('sunset-overlay');
+        const bioContainer = document.getElementById('sunset-bio-container');
+        if (original) original.classList.remove('hidden-for-sunset');
+        if (overlay) overlay.innerHTML = '';
+        if (bioContainer) bioContainer.style.height = '';
+        // Reset bloom line pool
+        bloomLinePool.length = 0;
+      }
+
+      // Expose bloomActive to window for mutual exclusion
+      Object.defineProperty(window, '_bloomActive', { get: function() { return bloomActive; } });
+
+      window.toggleBloomMode = function() {
+        const btn = document.getElementById('bloom-toggle-btn');
+        if (bloomActive) {
+          stopBloom();
+          if (btn) btn.classList.remove('active');
+          // Show ornaments again
+          var ornEl = document.getElementById('ornaments');
+          if (ornEl) ornEl.style.display = '';
+        } else {
+          // Disable sunset mode first (mutually exclusive)
+          if (window._sunsetActive) {
+            window.toggleSunsetMode();
+          }
+          startBloom();
+          if (btn) btn.classList.add('active');
+          // Hide ornaments during bloom mode
+          var ornEl = document.getElementById('ornaments');
+          if (ornEl) ornEl.style.display = 'none';
+        }
+      };
+
       function openModal(id) {
         document.getElementById('modal-backdrop').classList.add('active');
         document.getElementById(id).classList.add('active');
