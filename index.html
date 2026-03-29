@@ -354,12 +354,6 @@
       .bloom-flower.blooming {
         animation: bloomIn var(--bloom-duration, 4s) cubic-bezier(0.4, 0, 0.2, 1) forwards;
       }
-      /* Gentle petal sway for individual petals */
-      @keyframes petalSway {
-        0%, 100% { transform: rotate(0deg); }
-        25% { transform: rotate(3deg); }
-        75% { transform: rotate(-3deg); }
-      }
       .entry {
         border-left: 3px solid #FCF7E9;
         padding-left: 1rem;
@@ -1168,6 +1162,8 @@
         // Remove after animation completes
         const removeTimer = setTimeout(function() {
           if (el.parentNode) el.parentNode.removeChild(el);
+          var idx = bloomTimers.indexOf(removeTimer);
+          if (idx > -1) bloomTimers.splice(idx, 1);
         }, duration * 1000 + 100);
         bloomTimers.push(removeTimer);
       }
