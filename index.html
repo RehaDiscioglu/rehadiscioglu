@@ -855,7 +855,7 @@
         const skyEl = document.getElementById('sunset-sky')
         const globalSunEl = document.getElementById('sunset-sun-global')
         if (skyEl) { skyEl.classList.remove('active'); skyEl.style.background = '' }
-        if (globalSunEl) { globalSunEl.classList.remove('active') }
+        if (globalSunEl) { globalSunEl.classList.remove('active'); globalSunEl.style.clipPath = '' }
 
         // Restore original bio text
         const original = document.getElementById('sunset-bio-original')
