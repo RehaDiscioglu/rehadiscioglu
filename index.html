@@ -44,26 +44,51 @@
         display: none;
       }
       #sunset-sun-global.active { display: block; }
-      /* Sunset mode toggle button */
+      /* Sunset mode toggle switch */
       .sunset-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
         background: none;
-        border: 1.5px solid #E77625;
-        color: #E77625;
+        border: none;
         font-family: 'Source Sans Pro', sans-serif;
         font-size: 0.875rem;
-        padding: 0.3rem 0.75rem;
-        border-radius: 1rem;
+        color: #E77625;
         cursor: pointer;
-        transition: background 0.2s ease, color 0.2s ease;
         vertical-align: middle;
+        padding: 0;
       }
-      .sunset-toggle:hover {
-        background: #E77625;
-        color: #fff;
+      .sunset-toggle-label {
+        transition: opacity 0.2s ease;
       }
-      .sunset-toggle.active {
+      .sunset-toggle:hover .sunset-toggle-label {
+        opacity: 0.7;
+      }
+      .sunset-toggle-track {
+        position: relative;
+        width: 36px;
+        height: 20px;
+        background: #ccc;
+        border-radius: 10px;
+        transition: background 0.3s ease;
+        flex-shrink: 0;
+      }
+      .sunset-toggle.active .sunset-toggle-track {
         background: #E77625;
-        color: #fff;
+      }
+      .sunset-toggle-thumb {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 16px;
+        height: 16px;
+        background: #fff;
+        border-radius: 50%;
+        transition: transform 0.3s ease;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      }
+      .sunset-toggle.active .sunset-toggle-thumb {
+        transform: translateX(16px);
       }
       h1, h2, h3, h4 {
         font-family: 'Source Serif Pro', serif;
@@ -307,7 +332,10 @@
         <a href="blog/index.html" class="nav-link">Blog</a>
         <a href="mailto:reha@rehadiscioglu.com" class="nav-link">Email</a>
         <a href="https://www.linkedin.com/in/rehadiscioglu/" target="_blank" class="nav-link">LinkedIn</a>
-        <button id="sunset-toggle-btn" class="sunset-toggle" onclick="toggleSunsetMode()">Sunset Mode</button>
+        <button id="sunset-toggle-btn" class="sunset-toggle" onclick="toggleSunsetMode()">
+          <span class="sunset-toggle-label">Sunset Mode</span>
+          <span class="sunset-toggle-track"><span class="sunset-toggle-thumb"></span></span>
+        </button>
       </div>
 
       <!-- Latest blog post preview -->
@@ -508,7 +536,7 @@
         return `linear-gradient(to bottom, ${top} 0%, ${mid} 50%, ${bot} 100%)`
       }
 
-      // Animation: sun descends from top of viewport to bottom (horizon)
+      // Animation: sun descends from middle of page to horizon
       const ANIMATION_DURATION = 30000 // 30s for a slow, dreamy descent
       let animationStart = null
 
@@ -520,7 +548,7 @@
         if (animationStart === null) animationStart = now
         const elapsed = (now - animationStart) % ANIMATION_DURATION
         const t = elapsed / ANIMATION_DURATION
-        // Simple descent: 0 → 1 (top to bottom) with ease
+        // Descent: 0 → 1 (middle to horizon) with ease
         return easeInOutCubic(t)
       }
 
@@ -624,14 +652,17 @@
           const regionW = container.offsetWidth
           const progress = getSunProgress(now)
 
-          // --- Global sun position (viewport-relative) ---
-          // Sun descends from top of viewport to bottom (horizon)
+          // --- Global sun position (centered on content area) ---
+          // Sun starts centered in the page and descends to the horizon
           const sunRadius = Math.min(viewportW * 0.06, 80)
-          const sunViewportCx = viewportW / 2
-          // progress=0: sun at top (just above viewport), progress=1: sun at horizon (bottom edge)
-          const sunTopY = -sunRadius // starts just above viewport
-          const sunBottomY = viewportH - sunRadius * 0.5 // horizon: sun half-submerged at bottom
-          const sunViewportCy = sunTopY + progress * (sunBottomY - sunTopY)
+          // Center horizontally on the content container, not the viewport
+          const containerRect2 = container.getBoundingClientRect()
+          const sunViewportCx = containerRect2.left + containerRect2.width / 2
+          // progress=0: sun starts at middle of the page content area
+          // progress=1: sun reaches the horizon (bottom of viewport)
+          const sunStartY = containerRect2.top + 100 // start in the upper area of bio content
+          const sunHorizonY = viewportH + sunRadius * 0.3 // sun sinks slightly below viewport bottom (horizon)
+          const sunViewportCy = sunStartY + progress * (sunHorizonY - sunStartY)
 
           // Style the global sun (fixed position in viewport)
           const sunDiameter = sunRadius * 2
@@ -651,6 +682,42 @@
           const glowSize = 40 + progress * 60
           const glowSpread = 15 + progress * 35
           globalSunEl.style.boxShadow = `0 0 ${glowSize}px ${glowSpread}px rgba(251, 191, 36, ${0.15 + warmth * 0.2}), 0 0 ${glowSize * 1.5}px ${glowSpread * 1.5}px rgba(234, 88, 12, ${0.05 + warmth * 0.12})`
+
+          // --- Horizon clipping: hide the portion of the sun below the horizon ---
+          const horizonY = viewportH // horizon is at the bottom of the viewport
+          const sunTop = sunViewportCy - sunRadius
+          const sunBottom = sunViewportCy + sunRadius
+          if (sunBottom > horizonY && sunTop < horizonY) {
+            // Sun is crossing the horizon — clip it
+            const visibleHeight = horizonY - sunTop
+            const clipPercent = (visibleHeight / (sunRadius * 2)) * 100
+            globalSunEl.style.clipPath = `inset(0 0 ${100 - clipPercent}% 0)`
+          } else if (sunTop >= horizonY) {
+            // Sun is fully below horizon
+            globalSunEl.style.clipPath = 'inset(0 0 100% 0)'
+          } else {
+            globalSunEl.style.clipPath = 'none'
+          }
+
+          // --- Horizon glow effect when sun is near/at horizon ---
+          let horizonEl = document.getElementById('sunset-horizon-glow')
+          if (!horizonEl) {
+            horizonEl = document.createElement('div')
+            horizonEl.id = 'sunset-horizon-glow'
+            horizonEl.style.cssText = 'position:fixed;bottom:0;left:0;right:0;pointer-events:none;z-index:-1;transition:opacity 0.3s;'
+            document.body.appendChild(horizonEl)
+          }
+          // Show horizon glow when sun is in lower 40% of viewport
+          const horizonGlowProgress = Math.max(0, (progress - 0.6) / 0.4)
+          if (horizonGlowProgress > 0) {
+            const glowOpacity = horizonGlowProgress * 0.8
+            const glowHeight = 80 + horizonGlowProgress * 120
+            horizonEl.style.height = glowHeight + 'px'
+            horizonEl.style.background = `linear-gradient(to top, rgba(232, 93, 38, ${glowOpacity * 0.6}), rgba(251, 191, 36, ${glowOpacity * 0.3}), transparent)`
+            horizonEl.style.opacity = '1'
+          } else {
+            horizonEl.style.opacity = '0'
+          }
 
           // --- Sky background ---
           skyEl.style.background = getSkyGradient(progress)
@@ -801,10 +868,13 @@
         const btn = document.getElementById('sunset-toggle-btn')
         if (sunsetActive) {
           stopSunset()
-          if (btn) { btn.textContent = 'Sunset Mode'; btn.classList.remove('active') }
+          if (btn) btn.classList.remove('active')
+          // Remove horizon glow on deactivate
+          const horizonEl = document.getElementById('sunset-horizon-glow')
+          if (horizonEl) horizonEl.remove()
         } else {
           startSunset()
-          if (btn) { btn.textContent = 'Normal Mode'; btn.classList.add('active') }
+          if (btn) btn.classList.add('active')
         }
       }
     </script>
