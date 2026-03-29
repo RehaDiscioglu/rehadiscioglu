@@ -93,6 +93,51 @@
       .modal-content {
         padding: 0 1.5rem 2rem;
       }
+      /* Sunset text wrapping */
+      .sunset-bio-container {
+        position: relative;
+        min-height: 200px;
+      }
+      .sunset-bio-original {
+        /* Hidden when JS runs, visible as fallback */
+      }
+      .sunset-bio-original.hidden-for-sunset {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+      }
+      .sunset-overlay {
+        position: relative;
+      }
+      .sunset-overlay .line {
+        position: absolute;
+        white-space: nowrap;
+        pointer-events: auto;
+      }
+      .sunset-sun {
+        position: absolute;
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 0;
+        transition: transform 0.3s ease;
+      }
+      .sunset-overlay .line {
+        z-index: 1;
+      }
+      @media print {
+        .sunset-overlay, .sunset-sun { display: none !important; }
+        .sunset-bio-original.hidden-for-sunset {
+          position: static !important;
+          width: auto !important;
+          height: auto !important;
+          overflow: visible !important;
+          clip: auto !important;
+          white-space: normal !important;
+        }
+      }
       /* Ornament animations */
       .ornaments {
         display: flex;
@@ -193,19 +238,23 @@
         <p class="text-md" style="color: #6a6a6a;">B2B SaaS | AI | Design</p>
       </div>
 
-      <div class="text-base space-y-6">
-        <p>
-          I help companies figure out what to build, why it matters, and how to talk about it.
-        </p>
-        <p>
-          I grew up on a farm in Turkey. I was the first in my family to go to university. I studied computer science, then got into one of Europe's most competitive design programmes at Aalto, with no design background. My graduation project was a game where the player never needed to look at a screen. The physical world was the interface. That instinct, to make technology fit around people rather than the other way around, is still what drives my work.
-        </p>
-        <p>
-          I co-founded an energy risk management startup. I went from knowing nobody in the sector to sitting across from energy executives and securing pilots. I've moved countries four times. I'm either very adaptable or very restless. Probably both.
-        </p>
-        <p>
-          I have a habit of telling people what's broken in their business. An academic became a consultant. An astrologer doubled her clients by cutting her session time in half. If your product or business has something broken in it, I'll probably notice. We should talk.
-        </p>
+      <div class="sunset-bio-container" id="sunset-bio-container">
+        <div class="text-base space-y-6 sunset-bio-original" id="sunset-bio-original">
+          <p>
+            I help companies figure out what to build, why it matters, and how to talk about it.
+          </p>
+          <p>
+            I grew up on a farm in Turkey. I was the first in my family to go to university. I studied computer science, then got into one of Europe's most competitive design programmes at Aalto, with no design background. My graduation project was a game where the player never needed to look at a screen. The physical world was the interface. That instinct, to make technology fit around people rather than the other way around, is still what drives my work.
+          </p>
+          <p>
+            I co-founded an energy risk management startup. I went from knowing nobody in the sector to sitting across from energy executives and securing pilots. I've moved countries four times. I'm either very adaptable or very restless. Probably both.
+          </p>
+          <p>
+            I have a habit of telling people what's broken in their business. An academic became a consultant. An astrologer doubled her clients by cutting her session time in half. If your product or business has something broken in it, I'll probably notice. We should talk.
+          </p>
+        </div>
+        <div class="sunset-sun" id="sunset-sun"></div>
+        <div class="sunset-overlay" id="sunset-overlay" aria-hidden="true"></div>
       </div>
 
       <div class="mt-6 space-x-6">
@@ -356,6 +405,262 @@
         </div>
       </div>
     </div>
+
+    <script type="module">
+      import { prepareWithSegments, layoutNextLine } from 'https://esm.sh/@chenglou/pretext@0.0.3'
+
+      const BIO_TEXT = [
+        'I help companies figure out what to build, why it matters, and how to talk about it.',
+        'I grew up on a farm in Turkey. I was the first in my family to go to university. I studied computer science, then got into one of Europe\u2019s most competitive design programmes at Aalto, with no design background. My graduation project was a game where the player never needed to look at a screen. The physical world was the interface. That instinct, to make technology fit around people rather than the other way around, is still what drives my work.',
+        'I co-founded an energy risk management startup. I went from knowing nobody in the sector to sitting across from energy executives and securing pilots. I\u2019ve moved countries four times. I\u2019m either very adaptable or very restless. Probably both.',
+        'I have a habit of telling people what\u2019s broken in their business. An academic became a consultant. An astrologer doubled her clients by cutting her session time in half. If your product or business has something broken in it, I\u2019ll probably notice. We should talk.',
+      ]
+      const PARAGRAPH_GAP = 24 // matches space-y-6
+      const LINE_HEIGHT = 24 // matches text-base line-height
+      const FONT = '16px "Source Sans Pro", sans-serif'
+      const MIN_SLOT_WIDTH = 40
+      const SUN_COLORS = {
+        core: '#FDE68A',    // warm pale gold center
+        mid: '#FBBF24',     // amber
+        ring: '#F59E0B',    // deeper amber
+        edge: '#F97316',    // warm orange
+        outer: '#FB923C',   // soft orange
+        glow: 'rgba(251, 191, 36, 0.12)',
+      }
+
+      // Animation state
+      const ANIMATION_DURATION = 12000 // 12s full cycle
+      const RISE_FRACTION = 0.45 // 45% of cycle is rising
+      const HOLD_FRACTION = 0.1 // 10% hold at top
+      // remaining 45% is setting
+      let animationStart = null
+      let animationRunning = true
+
+      function easeInOutCubic(t) {
+        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+      }
+
+      function getSunProgress(now) {
+        if (animationStart === null) animationStart = now
+        const elapsed = (now - animationStart) % ANIMATION_DURATION
+        const t = elapsed / ANIMATION_DURATION
+
+        if (t < RISE_FRACTION) {
+          // Rising: 0 → 1
+          return easeInOutCubic(t / RISE_FRACTION)
+        } else if (t < RISE_FRACTION + HOLD_FRACTION) {
+          // Hold at top
+          return 1
+        } else {
+          // Setting: 1 → 0
+          const settingT = (t - RISE_FRACTION - HOLD_FRACTION) / (1 - RISE_FRACTION - HOLD_FRACTION)
+          return 1 - easeInOutCubic(settingT)
+        }
+      }
+
+      // Geometry helpers (from pretext editorial-engine demo)
+      function circleIntervalForBand(cx, cy, r, bandTop, bandBottom, hPad, vPad) {
+        const top = bandTop - vPad
+        const bottom = bandBottom + vPad
+        if (top >= cy + r || bottom <= cy - r) return null
+        const minDy = cy >= top && cy <= bottom ? 0 : cy < top ? top - cy : cy - bottom
+        if (minDy >= r) return null
+        const maxDx = Math.sqrt(r * r - minDy * minDy)
+        return { left: cx - maxDx - hPad, right: cx + maxDx + hPad }
+      }
+
+      function carveTextLineSlots(base, blocked) {
+        let slots = [base]
+        for (let i = 0; i < blocked.length; i++) {
+          const interval = blocked[i]
+          const next = []
+          for (let j = 0; j < slots.length; j++) {
+            const slot = slots[j]
+            if (interval.right <= slot.left || interval.left >= slot.right) {
+              next.push(slot)
+              continue
+            }
+            if (interval.left > slot.left) next.push({ left: slot.left, right: interval.left })
+            if (interval.right < slot.right) next.push({ left: interval.right, right: slot.right })
+          }
+          slots = next
+        }
+        return slots.filter(s => s.right - s.left >= MIN_SLOT_WIDTH)
+      }
+
+      // DOM pool management
+      const linePool = []
+      function syncLinePool(container, count) {
+        while (linePool.length < count) {
+          const el = document.createElement('div')
+          el.className = 'line'
+          container.appendChild(el)
+          linePool.push(el)
+        }
+        for (let i = 0; i < linePool.length; i++) {
+          linePool[i].style.display = i < count ? '' : 'none'
+        }
+      }
+
+      // Prepare text once fonts are loaded
+      let preparedParagraphs = null
+
+      async function init() {
+        await document.fonts.ready
+
+        preparedParagraphs = BIO_TEXT.map(text => prepareWithSegments(text, FONT))
+
+        const container = document.getElementById('sunset-bio-container')
+        const original = document.getElementById('sunset-bio-original')
+        const overlay = document.getElementById('sunset-overlay')
+        const sunEl = document.getElementById('sunset-sun')
+
+        if (!container || !original || !overlay || !sunEl) return
+
+        original.classList.add('hidden-for-sunset')
+
+        // First pass: compute natural text height without sun to know where center is
+        let naturalHeight = 0
+        {
+          const regionW = container.offsetWidth
+          for (let pIdx = 0; pIdx < preparedParagraphs.length; pIdx++) {
+            const prepared = preparedParagraphs[pIdx]
+            let cursor = { segmentIndex: 0, graphemeIndex: 0 }
+            let lineCount = 0
+            while (true) {
+              const line = layoutNextLine(prepared, cursor, regionW)
+              if (line === null) break
+              cursor = line.end
+              lineCount++
+            }
+            naturalHeight += lineCount * LINE_HEIGHT
+            if (pIdx < preparedParagraphs.length - 1) naturalHeight += PARAGRAPH_GAP
+          }
+        }
+
+        function render(now) {
+          const regionW = container.offsetWidth
+          const progress = getSunProgress(now)
+
+          // Sun geometry: centered horizontally
+          const sunRadius = Math.min(regionW * 0.18, 120)
+          const sunCx = regionW / 2
+          // progress=0: sun fully below text, progress=1: sun centered in text
+          const sunRestY = naturalHeight + sunRadius + 40 // fully below text
+          const sunTopY = naturalHeight * 0.45 // center of text area
+          const sunCy = sunRestY - progress * (sunRestY - sunTopY)
+
+          // Style the sun element
+          const sunDiameter = sunRadius * 2
+          sunEl.style.width = sunDiameter + 'px'
+          sunEl.style.height = sunDiameter + 'px'
+          sunEl.style.left = (sunCx - sunRadius) + 'px'
+          sunEl.style.top = (sunCy - sunRadius) + 'px'
+          sunEl.style.background = `radial-gradient(circle at 50% 50%, ${SUN_COLORS.core} 0%, ${SUN_COLORS.mid} 25%, ${SUN_COLORS.ring} 45%, ${SUN_COLORS.edge} 60%, ${SUN_COLORS.outer} 72%, ${SUN_COLORS.glow} 85%, transparent 100%)`
+          sunEl.style.boxShadow = `0 0 ${50 + progress * 50}px ${15 + progress * 25}px rgba(251, 191, 36, ${0.1 + progress * 0.15}), 0 0 ${80 + progress * 60}px ${30 + progress * 30}px rgba(249, 115, 22, ${0.05 + progress * 0.08})`
+          sunEl.style.opacity = Math.min(1, progress * 3 + 0.1)
+
+          // Layout text around the sun obstacle
+          const allLines = []
+          let globalY = 0
+
+          for (let pIdx = 0; pIdx < preparedParagraphs.length; pIdx++) {
+            const prepared = preparedParagraphs[pIdx]
+            let cursor = { segmentIndex: 0, graphemeIndex: 0 }
+            let lineTop = globalY
+            let textExhausted = false
+
+            while (!textExhausted) {
+              const bandTop = lineTop
+              const bandBottom = lineTop + LINE_HEIGHT
+
+              // Compute blocked interval from sun obstacle
+              const blocked = []
+              const interval = circleIntervalForBand(
+                sunCx, sunCy, sunRadius,
+                bandTop, bandBottom,
+                12, 2 // horizontal and vertical padding
+              )
+              if (interval) blocked.push(interval)
+
+              const slots = carveTextLineSlots({ left: 0, right: regionW }, blocked)
+
+              if (slots.length === 0) {
+                // Line fully blocked by sun, skip down
+                lineTop += LINE_HEIGHT
+                // Safety: don't go infinitely
+                if (lineTop > sunCy + sunRadius + LINE_HEIGHT * 2) {
+                  break
+                }
+                continue
+              }
+
+              // Use the widest slot for single-column text
+              const slot = slots.reduce((best, s) => {
+                const bestW = best.right - best.left
+                const sW = s.right - s.left
+                return sW > bestW ? s : best
+              })
+
+              const line = layoutNextLine(prepared, cursor, slot.right - slot.left)
+              if (line === null) {
+                textExhausted = true
+                break
+              }
+
+              allLines.push({
+                x: Math.round(slot.left),
+                y: Math.round(lineTop),
+                text: line.text,
+                width: line.width,
+              })
+              cursor = line.end
+              lineTop += LINE_HEIGHT
+            }
+
+            globalY = lineTop + PARAGRAPH_GAP
+          }
+
+          // Update DOM
+          syncLinePool(overlay, allLines.length)
+          for (let i = 0; i < allLines.length; i++) {
+            const el = linePool[i]
+            const line = allLines[i]
+            el.textContent = line.text
+            el.style.left = line.x + 'px'
+            el.style.top = line.y + 'px'
+            el.style.font = FONT
+            el.style.lineHeight = LINE_HEIGHT + 'px'
+            el.style.color = '#1a1a1a'
+          }
+
+          // Update container height
+          const lastLine = allLines[allLines.length - 1]
+          if (lastLine) {
+            const totalHeight = Math.max(
+              lastLine.y + LINE_HEIGHT + 10,
+              sunCy + sunRadius + 10
+            )
+            container.style.height = totalHeight + 'px'
+          }
+
+          if (animationRunning) {
+            requestAnimationFrame(render)
+          }
+        }
+
+        requestAnimationFrame(render)
+
+        // Recompute on resize
+        let resizeTimer = null
+        window.addEventListener('resize', () => {
+          // Layout will naturally update on next animation frame
+          // but we need to re-prepare if font metrics changed
+        })
+      }
+
+      init()
+    </script>
 
     <script>
       function openModal(id) {
