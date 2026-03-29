@@ -32,13 +32,38 @@
         z-index: -2;
         pointer-events: none;
         transition: background 0.1s linear;
+        display: none;
       }
+      #sunset-sky.active { display: block; }
       /* Page-level sun (fixed to viewport) */
       #sunset-sun-global {
         position: fixed;
         border-radius: 50%;
         pointer-events: none;
         z-index: -1;
+        display: none;
+      }
+      #sunset-sun-global.active { display: block; }
+      /* Sunset mode toggle button */
+      .sunset-toggle {
+        background: none;
+        border: 1.5px solid #E77625;
+        color: #E77625;
+        font-family: 'Source Sans Pro', sans-serif;
+        font-size: 0.875rem;
+        padding: 0.3rem 0.75rem;
+        border-radius: 1rem;
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease;
+        vertical-align: middle;
+      }
+      .sunset-toggle:hover {
+        background: #E77625;
+        color: #fff;
+      }
+      .sunset-toggle.active {
+        background: #E77625;
+        color: #fff;
       }
       h1, h2, h3, h4 {
         font-family: 'Source Serif Pro', serif;
@@ -282,6 +307,7 @@
         <a href="blog/index.html" class="nav-link">Blog</a>
         <a href="mailto:reha@rehadiscioglu.com" class="nav-link">Email</a>
         <a href="https://www.linkedin.com/in/rehadiscioglu/" target="_blank" class="nav-link">LinkedIn</a>
+        <button id="sunset-toggle-btn" class="sunset-toggle" onclick="toggleSunsetMode()">Sunset Mode</button>
       </div>
 
       <!-- Latest blog post preview -->
@@ -543,11 +569,16 @@
       }
 
       let preparedParagraphs = null
+      let sunsetAnimFrameId = null
+      let sunsetActive = false
+      let sunsetResizeHandler = null
 
-      async function init() {
+      async function startSunset() {
         await document.fonts.ready
 
-        preparedParagraphs = BIO_TEXT.map(text => prepareWithSegments(text, FONT))
+        if (!preparedParagraphs) {
+          preparedParagraphs = BIO_TEXT.map(text => prepareWithSegments(text, FONT))
+        }
 
         const container = document.getElementById('sunset-bio-container')
         const original = document.getElementById('sunset-bio-original')
@@ -557,6 +588,12 @@
         const skyEl = document.getElementById('sunset-sky')
 
         if (!container || !original || !overlay || !localSunEl || !globalSunEl || !skyEl) return
+
+        // Activate visual elements
+        skyEl.classList.add('active')
+        globalSunEl.classList.add('active')
+        animationStart = null
+        sunsetActive = true
 
         original.classList.add('hidden-for-sunset')
 
@@ -709,22 +746,67 @@
             container.style.height = totalHeight + 'px'
           }
 
-          requestAnimationFrame(render)
+          sunsetAnimFrameId = requestAnimationFrame(render)
         }
 
-        requestAnimationFrame(render)
+        sunsetAnimFrameId = requestAnimationFrame(render)
 
         // Recompute natural height on resize (debounced)
         let resizeTimer = null
-        window.addEventListener('resize', () => {
+        sunsetResizeHandler = () => {
           clearTimeout(resizeTimer)
           resizeTimer = setTimeout(() => {
             naturalHeight = computeNaturalHeight()
           }, 150)
-        })
+        }
+        window.addEventListener('resize', sunsetResizeHandler)
       }
 
-      init()
+      function stopSunset() {
+        sunsetActive = false
+
+        // Cancel animation
+        if (sunsetAnimFrameId) {
+          cancelAnimationFrame(sunsetAnimFrameId)
+          sunsetAnimFrameId = null
+        }
+
+        // Remove resize listener
+        if (sunsetResizeHandler) {
+          window.removeEventListener('resize', sunsetResizeHandler)
+          sunsetResizeHandler = null
+        }
+
+        // Hide sky and sun
+        const skyEl = document.getElementById('sunset-sky')
+        const globalSunEl = document.getElementById('sunset-sun-global')
+        if (skyEl) { skyEl.classList.remove('active'); skyEl.style.background = '' }
+        if (globalSunEl) { globalSunEl.classList.remove('active') }
+
+        // Restore original bio text
+        const original = document.getElementById('sunset-bio-original')
+        const overlay = document.getElementById('sunset-overlay')
+        const container = document.getElementById('sunset-bio-container')
+        if (original) original.classList.remove('hidden-for-sunset')
+        if (overlay) overlay.innerHTML = ''
+        if (container) container.style.height = ''
+
+        // Reset line pool
+        linePool.length = 0
+        animationStart = null
+      }
+
+      // Expose toggle to window scope
+      window.toggleSunsetMode = function() {
+        const btn = document.getElementById('sunset-toggle-btn')
+        if (sunsetActive) {
+          stopSunset()
+          if (btn) { btn.textContent = 'Sunset Mode'; btn.classList.remove('active') }
+        } else {
+          startSunset()
+          if (btn) { btn.textContent = 'Normal Mode'; btn.classList.add('active') }
+        }
+      }
     </script>
 
     <script>
