@@ -382,7 +382,6 @@
         <div class="desktop-nav flex items-center gap-6 text-sm">
           <a href="experience.html">Experience</a>
           <a href="how-to-work-with-me.html">How to Work With Me</a>
-          <a href="blog/index.html">Blog</a>
           <a href="projects.html">Projects</a>
           <a href="mailto:reha@rehadiscioglu.com">Email</a>
           <a href="https://www.linkedin.com/in/rehadiscioglu/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
@@ -394,7 +393,6 @@
       <div id="mobile-menu" class="mobile-menu max-w-3xl mx-auto px-4">
         <a href="experience.html">Experience</a>
         <a href="how-to-work-with-me.html">How to Work With Me</a>
-        <a href="blog/index.html">Blog</a>
         <a href="projects.html">Projects</a>
         <a href="mailto:reha@rehadiscioglu.com">Email</a>
         <a href="https://www.linkedin.com/in/rehadiscioglu/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
@@ -407,24 +405,12 @@
     <div id="sunset-sun-global"></div>
 
     <div class="max-w-3xl mx-auto py-12 px-4" style="position: relative; z-index: 1;">
-      <!-- Mode toggle buttons (upper right) -->
-      <div style="position: absolute; top: 1rem; right: 0; display: flex; gap: 1rem; align-items: center; z-index: 10;">
-        <button id="bloom-toggle-btn" class="bloom-toggle" onclick="toggleBloomMode()">
-          <span class="bloom-toggle-label">Bloom Mode</span>
-          <span class="bloom-toggle-track"><span class="bloom-toggle-thumb"></span></span>
-        </button>
-        <button id="sunset-toggle-btn" class="sunset-toggle" onclick="toggleSunsetMode()">
-          <span class="sunset-toggle-label">Sunset Mode</span>
-          <span class="sunset-toggle-track"><span class="sunset-toggle-thumb"></span></span>
-        </button>
-      </div>
 
       <div class="flex items-center mb-8">
         <img src="Reha_1_b_BW.jpg" alt="Portrait of Reha Discioglu, Product, AI & Design Strategist" class="w-32 h-32 object-cover rounded-full mr-6" />
       </div>
 
       <div class="mb-8">
-        <h1 class="text-4xl font-bold" style="color: #1a1a1a;">Reha Discioglu</h1>
         <p class="text-lg" style="color: #4a4a4a;">Product, AI & Design Strategist, Co-Founder @Astrolabium</p>
         <p class="text-md" style="color: #6a6a6a;">B2B SaaS | AI | Design</p>
       </div>
@@ -908,6 +894,7 @@
         if (sunsetActive) {
           stopSunset()
           if (btn) btn.classList.remove('active')
+          localStorage.removeItem('sunsetMode')
           // Remove horizon glow on deactivate
           const horizonEl = document.getElementById('sunset-horizon-glow')
           if (horizonEl) horizonEl.remove()
@@ -921,6 +908,8 @@
           }
           startSunset()
           if (btn) btn.classList.add('active')
+          localStorage.setItem('sunsetMode', 'true')
+          localStorage.removeItem('bloomMode')
           // Hide ornaments during sunset mode
           const ornEl = document.getElementById('ornaments')
           if (ornEl) ornEl.style.display = 'none'
@@ -1383,6 +1372,7 @@
         if (bloomActive) {
           stopBloom();
           if (btn) btn.classList.remove('active');
+          localStorage.removeItem('bloomMode');
           // Show ornaments again
           var ornEl = document.getElementById('ornaments');
           if (ornEl) ornEl.style.display = '';
@@ -1393,6 +1383,8 @@
           }
           startBloom();
           if (btn) btn.classList.add('active');
+          localStorage.setItem('bloomMode', 'true');
+          localStorage.removeItem('sunsetMode');
           // Hide ornaments during bloom mode
           var ornEl = document.getElementById('ornaments');
           if (ornEl) ornEl.style.display = 'none';
@@ -1409,6 +1401,20 @@
         var expanded = this.getAttribute('aria-expanded') === 'true';
         this.setAttribute('aria-expanded', !expanded);
       });
+
+      // Auto-activate modes from localStorage (set on Projects page)
+      (function() {
+        if (localStorage.getItem('bloomMode') === 'true') {
+          // Wait for pretext to be ready before activating
+          document.fonts.ready.then(function() {
+            setTimeout(function() { window.toggleBloomMode(); }, 300);
+          });
+        } else if (localStorage.getItem('sunsetMode') === 'true') {
+          document.fonts.ready.then(function() {
+            setTimeout(function() { window.toggleSunsetMode(); }, 300);
+          });
+        }
+      })();
     </script>
   </body>
 </html>
