@@ -390,24 +390,12 @@
     <div id="sunset-sun-global"></div>
 
     <div class="max-w-3xl mx-auto py-16 px-4" style="position: relative; z-index: 1;">
-      <!-- Mode toggle buttons (upper right) -->
-      <div style="position: absolute; top: 1rem; right: 0; display: flex; gap: 1rem; align-items: center; z-index: 10;">
-        <button id="bloom-toggle-btn" class="bloom-toggle" onclick="toggleBloomMode()">
-          <span class="bloom-toggle-label">Bloom Mode</span>
-          <span class="bloom-toggle-track"><span class="bloom-toggle-thumb"></span></span>
-        </button>
-        <button id="sunset-toggle-btn" class="sunset-toggle" onclick="toggleSunsetMode()">
-          <span class="sunset-toggle-label">Sunset Mode</span>
-          <span class="sunset-toggle-track"><span class="sunset-toggle-thumb"></span></span>
-        </button>
-      </div>
 
       <div class="flex items-center mb-8">
         <img src="Reha_1_b_BW.jpg" alt="Portrait of Reha Discioglu, Product, AI & Design Strategist" class="w-32 h-32 object-cover rounded-full mr-6" />
       </div>
 
       <div class="mb-8">
-        <h1 class="text-4xl font-bold" style="color: #1a1a1a;">Reha Discioglu</h1>
         <p class="text-lg" style="color: #4a4a4a;">Product, AI & Design Strategist, Co-Founder @Astrolabium</p>
         <p class="text-md" style="color: #6a6a6a;">B2B SaaS | AI | Design</p>
       </div>
@@ -433,8 +421,8 @@
 
       <div class="mt-6 space-x-6">
         <a href="#" onclick="openModal('experience-modal'); return false;" class="nav-link">Experience</a>
+        <a href="#" onclick="openModal('projects-modal'); return false;" class="nav-link">Projects</a>
         <a href="#" onclick="openModal('howto-modal'); return false;" class="nav-link">How to Work With Me</a>
-        <a href="blog/index.html" class="nav-link">Blog</a>
         <a href="mailto:reha@rehadiscioglu.com" class="nav-link">Email</a>
         <a href="https://www.linkedin.com/in/rehadiscioglu/" target="_blank" class="nav-link">LinkedIn</a>
       </div>
@@ -548,6 +536,32 @@
           <div class="entry">
             <h2 class="text-xl font-semibold">BSc, Computer Science &amp; Engineering</h2>
             <p>Sabanci University, Turkey (Sep 2004 - Jun 2009)</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Projects Modal -->
+    <div id="projects-modal" class="modal-panel">
+      <div class="modal-close">
+        <button onclick="closeAllModals()" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-content">
+        <h3 class="text-3xl font-semibold mb-6" style="color: #1a1a1a;">Projects</h3>
+        <div class="space-y-6 text-base">
+          <div class="entry">
+            <h2 class="text-xl font-semibold">Experimenting with pre-text library</h2>
+            <p class="mt-2">A creative showcase exploring the <a href="https://github.com/chenglou/pretext" target="_blank" style="color: #E77625;">pretext</a> library for dynamic text wrapping effects. Toggle the modes below, then close this panel to see the effect on the homepage text.</p>
+            <div class="mt-4" style="display: flex; gap: 1.5rem; align-items: center;">
+              <button id="bloom-toggle-btn" class="bloom-toggle" onclick="toggleBloomMode()">
+                <span class="bloom-toggle-label">Bloom Mode</span>
+                <span class="bloom-toggle-track"><span class="bloom-toggle-thumb"></span></span>
+              </button>
+              <button id="sunset-toggle-btn" class="sunset-toggle" onclick="toggleSunsetMode()">
+                <span class="sunset-toggle-label">Sunset Mode</span>
+                <span class="sunset-toggle-track"><span class="sunset-toggle-thumb"></span></span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
