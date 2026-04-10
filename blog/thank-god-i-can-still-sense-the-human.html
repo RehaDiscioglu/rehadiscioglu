@@ -62,15 +62,73 @@
       a:hover {
         opacity: 0.7;
       }
+      .site-nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background-color: #E8E7E5;
+        border-bottom: 1px solid #d4d3d1;
+      }
+      .site-nav a.active {
+        font-weight: 600;
+        border-bottom: 2px solid #E77625;
+      }
+      .hamburger-btn {
+        display: none;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.5rem;
+        color: #1a1a1a;
+      }
+      .mobile-menu {
+        display: none;
+      }
+      .mobile-menu.open {
+        display: flex;
+      }
+      @media (max-width: 768px) {
+        .desktop-nav { display: none !important; }
+        .hamburger-btn { display: block; }
+        .mobile-menu.open {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+          padding: 0.75rem 1rem 1rem;
+          border-top: 1px solid #d4d3d1;
+        }
+        .mobile-menu a {
+          padding: 0.5rem 0;
+          font-size: 0.95rem;
+        }
+      }
     </style>
   </head>
   <body>
-    <div class="max-w-3xl mx-auto py-16 px-4">
-      <div class="mb-6">
-        <a href="../index.html" class="text-sm">&larr; Home</a>
-        <span class="text-sm" style="color: #6a6a6a;"> / </span>
-        <a href="index.html" class="text-sm">Blog</a>
+    <nav class="site-nav" aria-label="Main navigation">
+      <div class="max-w-3xl mx-auto px-4 flex items-center justify-between h-14">
+        <a href="../index.html" class="text-lg font-semibold" style="font-family: 'Source Serif Pro', serif; color: #1a1a1a;">Reha Discioglu</a>
+        <div class="desktop-nav flex items-center gap-6 text-sm">
+          <a href="../experience.html">Experience</a>
+          <a href="../how-to-work-with-me.html">How to Work With Me</a>
+          <a href="../projects.html">Projects</a>
+          <a href="mailto:reha@rehadiscioglu.com">Email</a>
+          <a href="https://www.linkedin.com/in/rehadiscioglu/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+        </div>
+        <button class="hamburger-btn" onclick="document.getElementById('mobile-menu').classList.toggle('open')" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-menu">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
       </div>
+      <div id="mobile-menu" class="mobile-menu max-w-3xl mx-auto px-4">
+        <a href="../experience.html">Experience</a>
+        <a href="../how-to-work-with-me.html">How to Work With Me</a>
+        <a href="../projects.html">Projects</a>
+        <a href="mailto:reha@rehadiscioglu.com">Email</a>
+        <a href="https://www.linkedin.com/in/rehadiscioglu/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+      </div>
+    </nav>
+
+    <div class="max-w-3xl mx-auto py-12 px-4">
 
       <article>
         <header class="mb-8">
@@ -103,5 +161,17 @@
         <a href="index.html" class="text-sm">&larr; All posts</a>
       </div>
     </div>
+
+    <script>
+      document.querySelectorAll('#mobile-menu a').forEach(function(link) {
+        link.addEventListener('click', function() {
+          document.getElementById('mobile-menu').classList.remove('open');
+        });
+      });
+      document.querySelector('.hamburger-btn').addEventListener('click', function() {
+        var expanded = this.getAttribute('aria-expanded') === 'true';
+        this.setAttribute('aria-expanded', !expanded);
+      });
+    </script>
   </body>
 </html>
