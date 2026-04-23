@@ -158,6 +158,24 @@
         color: #6a6a6a;
         text-align: center;
       }
+      .project-figure--mockup img {
+        max-width: 360px;
+        margin: 0 auto;
+      }
+      .project-figure-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-top: 1.5rem;
+      }
+      .project-figure-row .project-figure {
+        margin-top: 0;
+      }
+      @media (max-width: 640px) {
+        .project-figure-row {
+          grid-template-columns: 1fr;
+        }
+      }
     </style>
   </head>
   <body>
@@ -194,7 +212,6 @@
       <div role="tablist" aria-label="Portfolio projects" class="tablist">
         <button role="tab" id="tab-astrolabium" class="tab" aria-selected="true" aria-controls="panel-astrolabium" tabindex="0" data-tab="astrolabium">Astrolabium</button>
         <button role="tab" id="tab-project-two" class="tab" aria-selected="false" aria-controls="panel-project-two" tabindex="-1" data-tab="project-two">Project Two</button>
-        <button role="tab" id="tab-project-three" class="tab" aria-selected="false" aria-controls="panel-project-three" tabindex="-1" data-tab="project-three">Project Three</button>
       </div>
 
       <!-- Astrolabium -->
@@ -235,52 +252,45 @@
         </figure>
       </section>
 
-      <!-- Project Two -->
+      <!-- Project Two: Conversational Safety Reporting -->
       <section role="tabpanel" id="panel-project-two" aria-labelledby="tab-project-two" class="tabpanel" data-panel="project-two" hidden>
         <h2 class="text-2xl font-semibold" style="color: #1a1a1a;">Project Two</h2>
-        <p class="project-meta">[Company] · [Role] · [Year]</p>
+        <p class="project-meta placeholder">[Company] · [Role] · [Year]</p>
 
         <p class="section-label">The Problem</p>
-        <p class="section-body placeholder">One sentence. The real problem, not the surface request. Placeholder text — replace with the actual problem statement.</p>
+        <p class="section-body">Frontline workers struggled with complex incident reporting forms. The issue was a cognitive gap between how workers naturally describe safety events and how rigid enterprise systems require them to be categorized. Safety managers also complained that training workers on these forms was incredibly time-consuming — even after extensive training sessions, submitted reports frequently lacked the proper data required for compliance.</p>
 
         <p class="section-label">The Tension</p>
-        <p class="section-body placeholder">What was pulling in the other direction? Stakeholder pressure, technical risk, commercial reality. Placeholder text — replace with the actual tension.</p>
+        <p class="section-body">This initiative started right after ChatGPT launched, when LLMs were at peak hype. Management was skeptical about whether this was just a trend. The biggest risk was technical and compliance-driven: could an LLM actually map unstructured chat into strict enterprise safety fields without hallucinating?</p>
 
         <p class="section-label">What I Did</p>
-        <div class="section-body placeholder">
+        <div class="section-body">
           <ul>
-            <li>Placeholder action one — concrete verb, concrete object.</li>
-            <li>Placeholder action two — concrete verb, concrete object.</li>
-            <li>Placeholder action three — concrete verb, concrete object.</li>
+            <li>Led a conversational AI PoC using LangChain to replace traditional reporting forms with natural-language interactions.</li>
+            <li>Prioritized technical validation over UX polish — started by training the LLM on very simple forms before tackling more complicated compliance workflows, ensuring the core mapping capability actually worked.</li>
           </ul>
         </div>
 
-        <p class="section-label">The Outcome</p>
-        <p class="section-body placeholder">One concrete result — metric, traction signal, or capability unlocked. Placeholder text — replace with the actual outcome.</p>
-      </section>
-
-      <!-- Project Three -->
-      <section role="tabpanel" id="panel-project-three" aria-labelledby="tab-project-three" class="tabpanel" data-panel="project-three" hidden>
-        <h2 class="text-2xl font-semibold" style="color: #1a1a1a;">Project Three</h2>
-        <p class="project-meta">[Company] · [Role] · [Year]</p>
-
-        <p class="section-label">The Problem</p>
-        <p class="section-body placeholder">One sentence. The real problem, not the surface request. Placeholder text — replace with the actual problem statement.</p>
-
-        <p class="section-label">The Tension</p>
-        <p class="section-body placeholder">What was pulling in the other direction? Stakeholder pressure, technical risk, commercial reality. Placeholder text — replace with the actual tension.</p>
-
-        <p class="section-label">What I Did</p>
-        <div class="section-body placeholder">
-          <ul>
-            <li>Placeholder action one — concrete verb, concrete object.</li>
-            <li>Placeholder action two — concrete verb, concrete object.</li>
-            <li>Placeholder action three — concrete verb, concrete object.</li>
-          </ul>
+        <div class="project-figure-row">
+          <figure class="project-figure project-figure--mockup">
+            <img src="images/portfolio/safety-before-1.png" alt="Existing mobile safety app home screen with 'Accident', 'Near miss', and 'Observation' form shortcuts." loading="lazy">
+            <figcaption>Before — rigid form shortcuts</figcaption>
+          </figure>
+          <figure class="project-figure project-figure--mockup">
+            <img src="images/portfolio/safety-before-2.png" alt="Existing TR Audit form with site, date, and enumerated category inputs." loading="lazy">
+            <figcaption>Before — structured audit form</figcaption>
+          </figure>
         </div>
+        <figure class="project-figure project-figure--mockup">
+          <img src="images/portfolio/safety-after.png" alt="Conversational interface: a Safety Team chat asking 'Where did it happen?' with quick-reply chips and 'When did it happen?' follow-up." loading="lazy">
+          <figcaption>After — conversational reporting with LLM-backed mapping</figcaption>
+        </figure>
 
         <p class="section-label">The Outcome</p>
-        <p class="section-body placeholder">One concrete result — metric, traction signal, or capability unlocked. Placeholder text — replace with the actual outcome.</p>
+        <p class="section-body">After a successful PoC, got buy-in from upper management and started recruiting customers for partnership.</p>
+
+        <p class="section-label">What I'd Do Differently</p>
+        <p class="section-body">Looking back, I wouldn't change the technical or product execution at all. Instead, I would have made much more noise internally and championed the project with more visible enthusiasm. When you're introducing emerging technology into a skeptical environment, proving it works is only the first step — you also have to confidently sell the vision and make people believe in its potential. I could have been a louder, more enthusiastic advocate for the massive impact this solution could have.</p>
       </section>
     </main>
 
