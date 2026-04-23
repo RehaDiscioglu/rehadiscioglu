@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portfolio | Reha Discioglu</title>
+    <meta name="robots" content="noindex,nofollow">
+    <meta name="googlebot" content="noindex,nofollow">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+Pro:wght@400;600;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: 'Source Sans Pro', sans-serif;
+        background-color: #E8E7E5;
+        color: #1a1a1a;
+      }
+      h1, h2, h3, h4 {
+        font-family: 'Source Serif Pro', serif;
+      }
+      /* Top navigation */
+      .site-nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background-color: #E8E7E5;
+        border-bottom: 1px solid #d4d3d1;
+      }
+      .site-nav a {
+        color: #E77625;
+        text-decoration: none;
+        transition: opacity 0.15s ease;
+      }
+      .site-nav a:hover {
+        opacity: 0.7;
+      }
+      .site-nav a.active {
+        font-weight: 600;
+        border-bottom: 2px solid #E77625;
+      }
+      .hamburger-btn {
+        display: none;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.5rem;
+        color: #1a1a1a;
+      }
+      .mobile-menu {
+        display: none;
+      }
+      .mobile-menu.open {
+        display: flex;
+      }
+      @media (max-width: 768px) {
+        .desktop-nav { display: none !important; }
+        .hamburger-btn { display: block; }
+        .mobile-menu.open {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+          padding: 0.75rem 1rem 1rem;
+          border-top: 1px solid #d4d3d1;
+        }
+        .mobile-menu a {
+          padding: 0.5rem 0;
+          font-size: 0.95rem;
+        }
+      }
+
+      /* Tablist */
+      .tablist {
+        display: flex;
+        gap: 0.25rem;
+        border-bottom: 1px solid #d4d3d1;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+      .tablist::-webkit-scrollbar { display: none; }
+      .tab {
+        background: none;
+        border: none;
+        padding: 0.75rem 1rem;
+        font-family: 'Source Sans Pro', sans-serif;
+        font-size: 0.95rem;
+        color: #4a4a4a;
+        cursor: pointer;
+        white-space: nowrap;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -1px;
+        transition: color 0.15s ease, border-color 0.15s ease;
+      }
+      .tab:hover {
+        color: #1a1a1a;
+      }
+      .tab[aria-selected="true"] {
+        color: #E77625;
+        border-bottom-color: #E77625;
+        font-weight: 600;
+      }
+      .tab:focus-visible {
+        outline: 2px solid #E77625;
+        outline-offset: 2px;
+        border-radius: 4px;
+      }
+
+      /* Tab panels */
+      .tabpanel {
+        display: none;
+        padding-top: 2rem;
+      }
+      .tabpanel.active {
+        display: block;
+      }
+      .project-meta {
+        font-size: 0.9rem;
+        color: #4a4a4a;
+        margin-top: 0.25rem;
+      }
+      .section-label {
+        font-family: 'Source Serif Pro', serif;
+        font-size: 0.8rem;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #E77625;
+        margin-top: 2rem;
+        margin-bottom: 0.5rem;
+      }
+      .section-body {
+        color: #1a1a1a;
+        line-height: 1.6;
+      }
+      .section-body ul {
+        list-style: disc;
+        padding-left: 1.25rem;
+      }
+      .section-body li {
+        margin-bottom: 0.35rem;
+      }
+      .placeholder {
+        color: #8a8a88;
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Top Navigation -->
+    <nav class="site-nav" aria-label="Main navigation">
+      <div class="max-w-3xl mx-auto px-4 flex items-center justify-between h-14">
+        <a href="index.html" class="text-lg font-semibold" style="font-family: 'Source Serif Pro', serif; color: #1a1a1a;">Reha Discioglu</a>
+        <div class="desktop-nav flex items-center gap-6 text-sm">
+          <a href="experience.html">Experience</a>
+          <a href="how-to-work-with-me.html">How to Work With Me</a>
+          <a href="projects.html">Projects</a>
+          <a href="mailto:reha@rehadiscioglu.com">Email</a>
+          <a href="https://www.linkedin.com/in/rehadiscioglu/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+        </div>
+        <button class="hamburger-btn" onclick="document.getElementById('mobile-menu').classList.toggle('open')" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-menu">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+      </div>
+      <div id="mobile-menu" class="mobile-menu max-w-3xl mx-auto px-4">
+        <a href="experience.html">Experience</a>
+        <a href="how-to-work-with-me.html">How to Work With Me</a>
+        <a href="projects.html">Projects</a>
+        <a href="mailto:reha@rehadiscioglu.com">Email</a>
+        <a href="https://www.linkedin.com/in/rehadiscioglu/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+      </div>
+    </nav>
+
+    <main class="max-w-3xl mx-auto py-12 px-4">
+      <header class="mb-8">
+        <h1 class="text-4xl font-bold" style="color: #1a1a1a;">Portfolio</h1>
+        <p class="text-lg mt-2" style="color: #4a4a4a;">Selected case studies. Placeholder copy — real content coming soon.</p>
+      </header>
+
+      <div role="tablist" aria-label="Portfolio projects" class="tablist">
+        <button role="tab" id="tab-project-one" class="tab" aria-selected="true" aria-controls="panel-project-one" tabindex="0" data-tab="project-one">Project One</button>
+        <button role="tab" id="tab-project-two" class="tab" aria-selected="false" aria-controls="panel-project-two" tabindex="-1" data-tab="project-two">Project Two</button>
+        <button role="tab" id="tab-project-three" class="tab" aria-selected="false" aria-controls="panel-project-three" tabindex="-1" data-tab="project-three">Project Three</button>
+      </div>
+
+      <!-- Project One -->
+      <section role="tabpanel" id="panel-project-one" aria-labelledby="tab-project-one" class="tabpanel active" data-panel="project-one">
+        <h2 class="text-2xl font-semibold" style="color: #1a1a1a;">Project One</h2>
+        <p class="project-meta">[Company] · [Role] · [Year]</p>
+
+        <p class="section-label">The Problem</p>
+        <p class="section-body placeholder">One sentence. The real problem, not the surface request. Placeholder text — replace with the actual problem statement.</p>
+
+        <p class="section-label">The Tension</p>
+        <p class="section-body placeholder">What was pulling in the other direction? Stakeholder pressure, technical risk, commercial reality. Placeholder text — replace with the actual tension.</p>
+
+        <p class="section-label">What I Did</p>
+        <div class="section-body placeholder">
+          <ul>
+            <li>Placeholder action one — concrete verb, concrete object.</li>
+            <li>Placeholder action two — concrete verb, concrete object.</li>
+            <li>Placeholder action three — concrete verb, concrete object.</li>
+          </ul>
+        </div>
+
+        <p class="section-label">The Outcome</p>
+        <p class="section-body placeholder">One concrete result — metric, traction signal, or capability unlocked. Placeholder text — replace with the actual outcome.</p>
+      </section>
+
+      <!-- Project Two -->
+      <section role="tabpanel" id="panel-project-two" aria-labelledby="tab-project-two" class="tabpanel" data-panel="project-two" hidden>
+        <h2 class="text-2xl font-semibold" style="color: #1a1a1a;">Project Two</h2>
+        <p class="project-meta">[Company] · [Role] · [Year]</p>
+
+        <p class="section-label">The Problem</p>
+        <p class="section-body placeholder">One sentence. The real problem, not the surface request. Placeholder text — replace with the actual problem statement.</p>
+
+        <p class="section-label">The Tension</p>
+        <p class="section-body placeholder">What was pulling in the other direction? Stakeholder pressure, technical risk, commercial reality. Placeholder text — replace with the actual tension.</p>
+
+        <p class="section-label">What I Did</p>
+        <div class="section-body placeholder">
+          <ul>
+            <li>Placeholder action one — concrete verb, concrete object.</li>
+            <li>Placeholder action two — concrete verb, concrete object.</li>
+            <li>Placeholder action three — concrete verb, concrete object.</li>
+          </ul>
+        </div>
+
+        <p class="section-label">The Outcome</p>
+        <p class="section-body placeholder">One concrete result — metric, traction signal, or capability unlocked. Placeholder text — replace with the actual outcome.</p>
+      </section>
+
+      <!-- Project Three -->
+      <section role="tabpanel" id="panel-project-three" aria-labelledby="tab-project-three" class="tabpanel" data-panel="project-three" hidden>
+        <h2 class="text-2xl font-semibold" style="color: #1a1a1a;">Project Three</h2>
+        <p class="project-meta">[Company] · [Role] · [Year]</p>
+
+        <p class="section-label">The Problem</p>
+        <p class="section-body placeholder">One sentence. The real problem, not the surface request. Placeholder text — replace with the actual problem statement.</p>
+
+        <p class="section-label">The Tension</p>
+        <p class="section-body placeholder">What was pulling in the other direction? Stakeholder pressure, technical risk, commercial reality. Placeholder text — replace with the actual tension.</p>
+
+        <p class="section-label">What I Did</p>
+        <div class="section-body placeholder">
+          <ul>
+            <li>Placeholder action one — concrete verb, concrete object.</li>
+            <li>Placeholder action two — concrete verb, concrete object.</li>
+            <li>Placeholder action three — concrete verb, concrete object.</li>
+          </ul>
+        </div>
+
+        <p class="section-label">The Outcome</p>
+        <p class="section-body placeholder">One concrete result — metric, traction signal, or capability unlocked. Placeholder text — replace with the actual outcome.</p>
+      </section>
+    </main>
+
+    <script>
+      // Close mobile menu when clicking a link
+      document.querySelectorAll('#mobile-menu a').forEach(function(link) {
+        link.addEventListener('click', function() {
+          document.getElementById('mobile-menu').classList.remove('open');
+        });
+      });
+      document.querySelector('.hamburger-btn').addEventListener('click', function() {
+        var expanded = this.getAttribute('aria-expanded') === 'true';
+        this.setAttribute('aria-expanded', !expanded);
+      });
+
+      // Tablist behavior
+      (function() {
+        var tabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"]'));
+        var panels = Array.prototype.slice.call(document.querySelectorAll('[role="tabpanel"]'));
+
+        function activate(tabId, updateHash) {
+          tabs.forEach(function(t) {
+            var isActive = t.dataset.tab === tabId;
+            t.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            t.setAttribute('tabindex', isActive ? '0' : '-1');
+          });
+          panels.forEach(function(p) {
+            var isActive = p.dataset.panel === tabId;
+            p.classList.toggle('active', isActive);
+            if (isActive) {
+              p.removeAttribute('hidden');
+            } else {
+              p.setAttribute('hidden', '');
+            }
+          });
+          if (updateHash) {
+            history.replaceState(null, '', '#tab-' + tabId);
+          }
+        }
+
+        tabs.forEach(function(tab) {
+          tab.addEventListener('click', function() {
+            activate(tab.dataset.tab, true);
+            tab.focus();
+          });
+          tab.addEventListener('keydown', function(e) {
+            var idx = tabs.indexOf(tab);
+            var next = null;
+            if (e.key === 'ArrowRight') next = tabs[(idx + 1) % tabs.length];
+            else if (e.key === 'ArrowLeft') next = tabs[(idx - 1 + tabs.length) % tabs.length];
+            else if (e.key === 'Home') next = tabs[0];
+            else if (e.key === 'End') next = tabs[tabs.length - 1];
+            if (next) {
+              e.preventDefault();
+              activate(next.dataset.tab, true);
+              next.focus();
+            }
+          });
+        });
+
+        // Initial selection from hash
+        var hash = window.location.hash || '';
+        if (hash.indexOf('#tab-') === 0) {
+          var initial = hash.slice(5);
+          if (tabs.some(function(t) { return t.dataset.tab === initial; })) {
+            activate(initial, false);
+          }
+        }
+      })();
+    </script>
+  </body>
+</html>
