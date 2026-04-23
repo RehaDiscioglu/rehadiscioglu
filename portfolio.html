@@ -142,6 +142,22 @@
         color: #8a8a88;
         font-style: italic;
       }
+      .project-figure {
+        margin: 1.5rem 0 0;
+      }
+      .project-figure img {
+        display: block;
+        width: 100%;
+        height: auto;
+        border: 1px solid #d4d3d1;
+        border-radius: 6px;
+      }
+      .project-figure figcaption {
+        margin-top: 0.5rem;
+        font-size: 0.8rem;
+        color: #6a6a6a;
+        text-align: center;
+      }
     </style>
   </head>
   <body>
@@ -172,37 +188,51 @@
     <main class="max-w-3xl mx-auto py-12 px-4">
       <header class="mb-8">
         <h1 class="text-4xl font-bold" style="color: #1a1a1a;">Portfolio</h1>
-        <p class="text-lg mt-2" style="color: #4a4a4a;">Selected case studies. Placeholder copy — real content coming soon.</p>
+        <p class="text-lg mt-2" style="color: #4a4a4a;">Selected case studies.</p>
       </header>
 
       <div role="tablist" aria-label="Portfolio projects" class="tablist">
-        <button role="tab" id="tab-project-one" class="tab" aria-selected="true" aria-controls="panel-project-one" tabindex="0" data-tab="project-one">Project One</button>
+        <button role="tab" id="tab-astrolabium" class="tab" aria-selected="true" aria-controls="panel-astrolabium" tabindex="0" data-tab="astrolabium">Astrolabium</button>
         <button role="tab" id="tab-project-two" class="tab" aria-selected="false" aria-controls="panel-project-two" tabindex="-1" data-tab="project-two">Project Two</button>
         <button role="tab" id="tab-project-three" class="tab" aria-selected="false" aria-controls="panel-project-three" tabindex="-1" data-tab="project-three">Project Three</button>
       </div>
 
-      <!-- Project One -->
-      <section role="tabpanel" id="panel-project-one" aria-labelledby="tab-project-one" class="tabpanel active" data-panel="project-one">
-        <h2 class="text-2xl font-semibold" style="color: #1a1a1a;">Project One</h2>
-        <p class="project-meta">[Company] · [Role] · [Year]</p>
+      <!-- Astrolabium -->
+      <section role="tabpanel" id="panel-astrolabium" aria-labelledby="tab-astrolabium" class="tabpanel active" data-panel="astrolabium">
+        <h2 class="text-2xl font-semibold" style="color: #1a1a1a;">Astrolabium</h2>
+        <p class="project-meta">Astrolabium · Co-founder · 2024–2025</p>
 
-        <p class="section-label">The Problem</p>
-        <p class="section-body placeholder">One sentence. The real problem, not the surface request. Placeholder text — replace with the actual problem statement.</p>
+        <p class="section-label">Market Gap</p>
+        <p class="section-body">Most risk management tools for energy trading companies were built for large players — expensive, complex, and out of reach for SMBs. Smaller energy companies were trading blind, with no affordable way to anticipate tail-risk events. Especially in Iberia, where heavy solar injection into the market makes volatility the second-biggest problem.</p>
 
         <p class="section-label">The Tension</p>
-        <p class="section-body placeholder">What was pulling in the other direction? Stakeholder pressure, technical risk, commercial reality. Placeholder text — replace with the actual tension.</p>
+        <p class="section-body">Our vision was an AI copilot that would ingest a company's proprietary trading data, learn their patterns, and proactively surface dynamic risk insights. But as a bootstrapped startup, we couldn't justify building that infrastructure before validating whether customers would pay for the underlying value. The core product question became: how do you prove the insight is worth something before investing in the AI that delivers it?</p>
 
-        <p class="section-label">What I Did</p>
-        <div class="section-body placeholder">
+        <p class="section-label">What We Did</p>
+        <div class="section-body">
           <ul>
-            <li>Placeholder action one — concrete verb, concrete object.</li>
-            <li>Placeholder action two — concrete verb, concrete object.</li>
-            <li>Placeholder action three — concrete verb, concrete object.</li>
+            <li>Ran a discovery process with 10+ energy executives to validate the problem and the need.</li>
+            <li>Built proprietary AI models trained on Iberian power-market data to identify tail-risk signals, reaching 95% forecast accuracy (in line with benchmarks).</li>
+            <li>Reduced the MVP to a visual dashboard that made tail-risk exposure visible and actionable, so traders could see the signal without us building the full copilot first.</li>
+            <li>Ran 4 SMB pilots with continuous discovery embedded.</li>
+            <li>Discovered through those pilots that SMBs could not pay the price point required to make the business model work.</li>
+            <li>Used that finding to pivot the product direction toward enterprise, where dynamic AI-driven risk management could command the right margin.</li>
           </ul>
         </div>
 
+        <figure class="project-figure">
+          <img src="images/portfolio/PNCombined.png" alt="PowerNavigator dashboard: net energy, daily average spot price simulation, futures hedging controls, and aggregated hedging ratio statistics." loading="lazy">
+        </figure>
+
         <p class="section-label">The Outcome</p>
-        <p class="section-body placeholder">One concrete result — metric, traction signal, or capability unlocked. Placeholder text — replace with the actual outcome.</p>
+        <p class="section-body">4 pilots completed. 2 Letters of Intent secured from SMB customers. Validated that the insight had real demand, even if the segment economics didn't work at scale.</p>
+
+        <p class="section-label">What I'd Do Differently</p>
+        <p class="section-body">We had an enterprise-grade vision from day one — an AI copilot handling dynamic risk management — but we exclusively piloted with SMBs. In hindsight, I would have held onto that original vision more firmly and run a few enterprise pilots in parallel, even at an early stage. The SMB pricing ceiling was a segment constraint, not a product constraint. Experimenting with enterprise earlier might have given us the commercial green light we needed to justify the full build.</p>
+
+        <figure class="project-figure">
+          <img src="images/portfolio/PNpivot.png" alt="Astrolabium Risk Anomaly Detection: deviations from typical risk patterns across scenarios with status and key drivers." loading="lazy">
+        </figure>
       </section>
 
       <!-- Project Two -->
